@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="macropodus_images/macropodus_logo.png" width="480"\>
+    <img src="macropodus_images/macropodus_logo.png" width="320"\>
 </p>
 
 # [Macropodus](https://github.com/yongzhuo/Macropodus)

@@ -40,7 +40,7 @@ def train(hyper_parameters=None, rate=1.0):
         'level_type': 'char',  # 级别, 最小单元, 字/词, 填 'char' or 'word', 注意:word2vec模式下训练语料要首先切好
         'embedding_type': 'albert',  # 级别, 嵌入类型, 还可以填'xlnet'、'random'、 'bert'、 'albert' or 'word2vec"
         'gpu_memory_fraction': 0.76, #gpu使用率
-        'model': {'label': 4,  # 类别数
+        'model': {'label': 5,  # 类别数
                   'batch_size': 256,  # 批处理尺寸, 感觉原则上越大越好,尤其是样本不均衡的时候, batch_size设置影响比较大
                   'dropout': 0.5,  # 随机失活, 概率
                   'decay_step': 100,  # 学习率衰减step, 每N个step衰减一次
@@ -50,9 +50,9 @@ def train(hyper_parameters=None, rate=1.0):
                   'lr': 1e-3,  # 学习率, bert取5e-5,其他取1e-3,如果acc较低或者一直不变,优先调这个, 对训练会有比较大的影响, 如果准确率一直上不去,可以考虑调这个参数
                   'l2': 1e-9,  # l2正则化
                   'activate_classify': 'softmax',  # 最后一个layer, 即分类激活函数
-                  'loss': 'categorical_crossentropy',  # 损失函数
-                  'metrics': 'accuracy',  # 保存更好模型的评价标准
-                  'optimizer_name': 'ADAM',
+                  'loss': 'sparse_categorical_crossentropy',  # 损失函数, mse, categorical_crossentropy, sparse_categorical_crossentropy, binary_crossentropy等
+                  'metrics': 'accuracy',  # 保存更好模型的评价标准, accuracy, binary_accuracy, categorical_accuracy, sparse_categorical_accuracy, sparse_top_k_categorical_accuracy
+                  'optimizer_name': 'ADAM',  # 可填'ADAM', 'RADAM', 'RADAM,LOOKAHEAD'
                   'is_training': True,  # 训练后者是测试模型
                   'path_model_dir': path_model_dir,
                   'model_path': os.path.join(path_model_dir, "bilstm_crf.model"), # 模型地址, loss降低则保存的依据, save_best_only=True, save_weights_only=True
@@ -62,6 +62,7 @@ def train(hyper_parameters=None, rate=1.0):
                   'num_rnn_layers': 1, # rnn层数
                   'rnn_type': 'GRU', # rnn类型,可以填"LSTM","GRU","CuDNNLSTM","CuDNNGRU"
                   'rnn_units': 256,  # rnn隐藏元
+                  'crf_mode': 'other',  # crf类型, 可填'other', 'reg', 'pad'(包括句子实际长度)
                   },
         'embedding': {'layer_indexes': [12], # bert取的层数
                       # 'corpus_path': '',     # embedding预训练数据地址,不配则会默认取conf里边默认的地址, keras-bert可以加载谷歌版bert,百度版ernie(需转换，https://github.com/ArthurRizar/tensorflow_ernie),哈工大版bert-wwm(tf框架，https://github.com/ymcui/Chinese-BERT-wwm)
@@ -74,14 +75,18 @@ def train(hyper_parameters=None, rate=1.0):
     # 删除先前存在的模型和embedding微调模型等
     delete_file(path_model_dir)
     time_start = time.time()
+    # 数据预处理初始化
+    from macropodus.network.preprocess.preprocess_generator import PreprocessGenerator
+    pg = PreprocessGenerator(os.path.join(path_model_dir, "l2i_i2l.json"))
+    label_sets, _ = pg.preprocess_label2set(hyper_parameters['data']['train_data'])
+    # 训练数据中试集序列类别个数
+    hyper_parameters['model']['label'] = len(label_sets)
     # graph初始化
     graph = Graph(hyper_parameters)
     print("graph init ok!")
     ra_ed = graph.word_embedding
 
-    from macropodus.network.preprocess.preprocess_generator import PreprocessGenerator
-
-    pg = PreprocessGenerator(os.path.join(path_model_dir, "l2i_i2l.json"))
+    # 数据预处理, fit
     _, len_train = pg.preprocess_label2set(hyper_parameters['data']['train_data'])
     x_train, y_train = pg.preprocess_label_question_to_idx_fit(embedding_type=hyper_parameters['embedding_type'],
                                                                path=hyper_parameters['data']['train_data'],

@@ -96,7 +96,7 @@ def delete_file(path):
         # 取文件或者目录的绝对路径
         path_children = os.path.join(path, i)
         if os.path.isfile(path_children):
-            if path_children.endswith(".h5") or path_children.endswith(".json"):
+            if path_children.endswith(".h5") or path_children.endswith(".json") or "events" in path_children or "trace" in path_children:
                 os.remove(path_children)
         else:# 递归, 删除目录下的所有文件
             delete_file(path_children)

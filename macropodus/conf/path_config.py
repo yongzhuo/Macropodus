@@ -35,4 +35,4 @@ path_ner_people_1998_valid = os.path.join(path_root, "data/corpus/ner_people_199
 path_seg_pku_1998_train = os.path.join(path_root, "data/corpus/seg_pku_1998/train.json")
 
 # path of training model save dir
-path_model_dir = os.path.join(path_root, "data/model")
+path_model_dir = os.path.join(path_root, "data", "model")

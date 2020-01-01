@@ -45,6 +45,6 @@ chi2num = chi2num
 num2chi = num2chi
 
 # 是否使用深度学习模型
-use_dl=False
+use_dl=True
 if use_dl:
     from macropodus.__init_tf_keras import * # tf.python.keras, custom_objects

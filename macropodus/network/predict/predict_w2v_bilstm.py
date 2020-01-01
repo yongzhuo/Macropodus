@@ -13,9 +13,13 @@ from macropodus.conf.path_config import path_model_dir
 from keras_bert import Tokenizer
 import numpy as np
 import macropodus
-import codecs
 import pickle
+import codecs
+import json
 import os
+
+
+path_model_dir = "D:/workspace/pythonMyCode/Macropodus/macropodus/data/model"
 
 
 path_dir = path_model_dir # + "/ner_albert_bilstm_people_199801"
@@ -27,11 +31,12 @@ model.load_weights(path_dir+"/model.h5")
 
 # reader tokenizer
 token_dict = {}
-path_dict = os.path.join(path_embedding_albert, "vocab.txt")
+path_dict = os.path.join(path_model_dir, "vocab.txt")
 with codecs.open(path_dict, 'r', 'utf8') as reader:
     for line in reader:
         token = line.strip()
-        token_dict[token] = len(token_dict)
+        token_dict = json.loads(token)
+
 vocab_size = len(token_dict)
 tokenizer = Tokenizer(token_dict)
 # params
@@ -59,7 +64,7 @@ def sentence2idx(text):
     x_ = np.array(x)
     x_1 = np.array([x[0] for x in x_])
     x_2 = np.array([x[1] for x in x_])
-    return [x_1, x_2]
+    return x_1
 
 while True:
     print("请输入:")
@@ -70,4 +75,3 @@ while True:
     res_idxs = [np.argmax(rl) for rl in res_list]
     res_label = [l2i_i2l["i2l"][str(ri)] if str(ri) in l2i_i2l["i2l"] else "O" for ri in  res_idxs]
     print(res_label[:len(ques)])
-

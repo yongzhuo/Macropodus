@@ -100,10 +100,12 @@ class graph:
           评价函数、早停
         :return: callback
         """
-        cb_em = [
-            tf.keras.callbacks.EarlyStopping(monitor="val_loss", mode="min", min_delta=1e-8, patience=self.patience),
-            tf.keras.callbacks.ModelCheckpoint(monitor="val_loss", mode="min", filepath=self.path_model, verbose=1,
-                                               save_best_only=True, save_weights_only=False), ]
+        # import datetime
+        # self.path_model_dir = os.path.join(self.path_model_dir, "plugins/profile", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+        cb_em = [tf.keras.callbacks.ModelCheckpoint(monitor="val_loss", mode="min", filepath=self.path_model, verbose=1, save_best_only=True, save_weights_only=False),
+                 tf.keras.callbacks.TensorBoard(log_dir=os.path.join(self.path_model_dir, "logs"), batch_size=self.batch_size, update_freq='batch'),
+                 tf.keras.callbacks.EarlyStopping(monitor="val_loss", mode="min", min_delta=1e-8, patience=self.patience),
+                 ]
         return cb_em
 
     def create_compile(self):
@@ -169,16 +171,18 @@ class graph:
         pg = PreprocessGenerator(self.path_model_l2i_i2l)
         _, len_train = pg.preprocess_label2set(self.hyper_parameters["data"]["train_data"])
         data_fit_generator = pg.preprocess_label_question_to_idx_fit_generator(embedding_type=self.hyper_parameters["embedding_type"],
-                                                             batch_size=self.batch_size,
-                                                             path=self.hyper_parameters["data"]["train_data"],
-                                                             embed=embed,
-                                                             rate=rate)
+                                                                               crf_mode=self.hyper_parameters["model"]["crf_mode"],
+                                                                               path=self.hyper_parameters["data"]["train_data"],
+                                                                               batch_size=self.batch_size,
+                                                                               embed=embed,
+                                                                               rate=rate)
         _, len_val = pg.preprocess_label2set(self.hyper_parameters["data"]["val_data"])
         data_dev_generator = pg.preprocess_label_question_to_idx_fit_generator(embedding_type=self.hyper_parameters["embedding_type"],
-                                                             batch_size=self.batch_size,
-                                                             path=self.hyper_parameters["data"]["val_data"],
-                                                             embed=embed,
-                                                             rate=rate)
+                                                                               crf_mode=self.hyper_parameters["model"]["crf_mode"],
+                                                                               path=self.hyper_parameters["data"]["val_data"],
+                                                                               batch_size=self.batch_size,
+                                                                               embed=embed,
+                                                                               rate=rate)
         steps_per_epoch = len_train // self.batch_size
         validation_steps = len_val // self.batch_size
         # 训练模型

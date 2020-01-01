@@ -17,6 +17,7 @@ class PreprocessGenerator:
     """
         数据预处理, 输入为csv格式, [label,ques]
     """
+
     def __init__(self, path_model_l2i_i2l):
         self.path_model_l2i_i2l = path_model_l2i_i2l
         self.l2i_i2l = None
@@ -75,7 +76,7 @@ class PreprocessGenerator:
         file_csv.close()
         return label_sets, len_all
 
-    def preprocess_label_question_to_idx_fit_generator(self, embedding_type, batch_size, path, embed, rate=1):
+    def preprocess_label_question_to_idx_fit_generator(self, embedding_type, batch_size, path, embed, rate=1, crf_mode='reg'):
         """
             fit_generator用, 将句子, 类标转化为数字idx
         :param embedding_type: str, like 'albert'
@@ -83,6 +84,7 @@ class PreprocessGenerator:
         :param path: str, like 'train.json'
         :param embed: class, like embed
         :param rate: float, like 0.9
+        :param crf_mode: str, like 'reg', 'pad'
         :return: yield
         """
         # 首先获取label,set,即存在的具体类
@@ -108,72 +110,94 @@ class PreprocessGenerator:
         if len_ql <= 500:  # sample时候不生效,使得语料足够训练
             len_ql = len_all
 
-        def process_line(line, embed, use_len_seq=True):
+        def process_line(line, embed, l2i_i2l):
             """
-                关键:对每一条数据操作，获取label和问句index              
-            :param line: str, like '大漠帝国'
-            :param embed: class, like embed
-            :param use_len_seq: boolean, True or False
+                对每一条数据操作，获取label和问句index
+            :param line: 
+            :param embed: 
+            :param l2i_i2l: 
             :return: 
             """
-
+            # 对每一条数据操作，对question和label进行padding
             ques_label = json.loads(line.strip())
             label_org = ques_label["label"]
             label_index = [l2i_i2l["l2i"][lr] for lr in label_org]
-            len_sequence = len(label_index)
-            que_embed = embed.sentence2idx(ques_label["question"])
-            # padding label
-            len_leave = embed.len_max - len(label_index)
-            if len_leave >= 0:
-                label_index_leave = [li for li in label_index] + [l2i_i2l["l2i"]["O"] for i in range(len_leave)]
+            # len_sequence = len(label_index)
+            que_embed = embed.sentence2idx("".join(ques_label["question"]))
+            # label padding
+            if embedding_type in ['bert', 'albert']:
+                # padding label
+                len_leave = embed.len_max - len(label_index) - 2
+                if len_leave >= 0:
+                    label_index_leave = [l2i_i2l["l2i"]["<PAD>"]] + [li for li in label_index] + [
+                        l2i_i2l["l2i"]["<PAD>"]] + [l2i_i2l["l2i"]["<PAD>"] for i in range(len_leave)]
+                else:
+                    label_index_leave = [l2i_i2l["l2i"]["<PAD>"]] + label_index[0:embed.len_max - 2] + [
+                        l2i_i2l["l2i"]["<PAD>"]]
             else:
-                label_index_leave = label_index[0:embed.len_max]
-            if use_len_seq:
-                return [que_embed[0], que_embed[1], len_sequence], label_index_leave
-            else:
-                return [que_embed, len_sequence], label_index_leave
+                # padding label
+                len_leave = embed.len_max - len(label_index)  # -2
+                if len_leave >= 0:
+                    label_index_leave = [li for li in label_index] + [l2i_i2l["l2i"]["<PAD>"] for i in range(len_leave)]
+                else:
+                    label_index_leave = label_index[0:embed.len_max]
+            # 转为one-hot
+            label_res = to_categorical(label_index_leave, num_classes=len(l2i_i2l["l2i"]))
+            return que_embed, label_res
 
-        while True:
-            file_csv = open(path, "r", encoding="utf-8")
-            cout_all_line = 0
-            cnt = 0
-            x, y = [], []
+        file_csv = open(path, "r", encoding="utf-8")
+        cout_all_line = 0
+        cnt = 0
+        x, y = [], []
+        for line in file_csv:
             # 跳出循环
             if len_ql < cout_all_line:
                 break
-            for line in file_csv:
-                cout_all_line += 1
-                if line.strip():
-                    x_line, y_line = process_line(line, embed, use_len_seq=True)
-                    x.append(x_line)
-                    y.append(y_line)
-                    cnt += 1
-                if cnt == batch_size:
-                    if embedding_type in ['bert', 'albert']:
-                        x_, y_ = np.array(x), np.array(y)
-                        x_1 = np.array([x[0] for x in x_])
-                        x_2 = np.array([x[1] for x in x_])
-                        x_3 = np.array([x[2] for x in x_])
+            cout_all_line += 1
+            if line.strip():
+                # 一个json一个json处理
+                # 备注:最好训练前先处理,使得ques长度小于等于len_max(word2vec), len_max-2(bert, albert)
+                x_line, y_line = process_line(line, embed, l2i_i2l)
+                x.append(x_line)
+                y.append(y_line.tolist())
+                cnt += 1
+            # 使用fit_generator时候, 每个batch_size进行yield
+            if cnt == batch_size:
+                # 通过两种方式处理: 1.嵌入类型(bert, word2vec, random), 2.条件随机场(CRF:'pad', 'reg')类型
+                if embedding_type in ['bert', 'albert']:
+                    x_, y_ = np.array(x), np.array(y)
+                    x_1 = np.array([x[0] for x in x_])
+                    x_2 = np.array([x[1] for x in x_])
+                    x_3 = np.array([x[2] for x in x_])
+                    if crf_mode == 'pad':
                         x_all = [x_1, x_2, x_3]
+                    elif crf_mode == 'reg':
+                        x_all = [x_1, x_2]
                     else:
-                        x_all, y_ = np.array(x), np.array(y)
+                        x_all = [x_1, x_2]
+                else:
+                    x_, y_ = np.array(x), np.array(y)
+                    x_1 = np.array([x[0] for x in x_])
+                    x_2 = np.array([x[1] for x in x_])
+                    if crf_mode == 'pad':
+                        x_all = [x_1, x_2]
+                    elif crf_mode == 'reg':
+                        x_all = [x_1]
+                    else:
+                        x_all = [x_1]
 
-                    cnt = 0
-                    yield (x_all, y_)
-                    x, y =[], []
-        file_csv.close()
-        print("preprocess_label_ques_to_idx ok")
+                cnt = 0
+                yield (x_all, y_)
+                x, y = [], []
 
-    def preprocess_label_question_to_idx_fit(self, embedding_type, path, embed, rate=1, batch_size=64, crf_mode='reg', fit_type='fit'):
+    def preprocess_label_question_to_idx_fit(self, embedding_type, path, embed, rate=1, crf_mode='reg'):
         """
             fit用, 关键:对每一条数据操作，获取label和问句index              
         :param embedding_type: str, like 'albert'
         :param path: str, like 'train.json'
         :param embed: class, like embed
         :param rate: float, like 0.9
-        :param batch_size: int, like 64
         :param crf_mode: str, like 'reg', 'pad'
-        :param fit_type: str, like 'fit', 'fit_generator'
         :return: np.array
         """
         # 首先获取label,set,即存在的具体类
@@ -216,11 +240,13 @@ class PreprocessGenerator:
             # label padding
             if embedding_type in ['bert', 'albert']:
                 # padding label
-                len_leave = embed.len_max - len(label_index) -2
+                len_leave = embed.len_max - len(label_index) - 2
                 if len_leave >= 0:
-                    label_index_leave = [l2i_i2l["l2i"]["<PAD>"]] + [li for li in label_index] + [l2i_i2l["l2i"]["<PAD>"]] + [l2i_i2l["l2i"]["<PAD>"] for i in range(len_leave)]
+                    label_index_leave = [l2i_i2l["l2i"]["<PAD>"]] + [li for li in label_index] + [
+                        l2i_i2l["l2i"]["<PAD>"]] + [l2i_i2l["l2i"]["<PAD>"] for i in range(len_leave)]
                 else:
-                    label_index_leave = [l2i_i2l["l2i"]["<PAD>"]] + label_index[0:embed.len_max-2] + [l2i_i2l["l2i"]["<PAD>"]]
+                    label_index_leave = [l2i_i2l["l2i"]["<PAD>"]] + label_index[0:embed.len_max - 2] + [
+                        l2i_i2l["l2i"]["<PAD>"]]
             else:
                 # padding label
                 len_leave = embed.len_max - len(label_index)  # -2
@@ -248,59 +274,28 @@ class PreprocessGenerator:
                 x.append(x_line)
                 y.append(y_line.tolist())
                 cnt += 1
-            # 使用fit_generator时候, 每个batch_size进行yield
-            if fit_type=='fit_generator' and cnt == batch_size:
-                # 通过两种方式处理: 1.嵌入类型(bert, word2vec, random), 2.条件随机场(CRF:'pad', 'reg')类型
-                if embedding_type in ['bert', 'albert']:
-                    x_, y_ = np.array(x), np.array(y)
-                    x_1 = np.array([x[0] for x in x_])
-                    x_2 = np.array([x[1] for x in x_])
-                    x_3 = np.array([x[2] for x in x_])
-                    if crf_mode == 'pad':
-                        x_all = [x_1, x_2, x_3]
-                    elif crf_mode == 'reg':
-                        x_all = [x_1, x_2]
-                    else:
-                        x_all = [x_1, x_2]
-                else:
-                    x_, y_ = np.array(x), np.array(y)
-                    x_1 = np.array([x[0] for x in x_])
-                    x_2 = np.array([x[1] for x in x_])
-                    if crf_mode == 'pad':
-                        x_all = [x_1, x_2]
-                    elif crf_mode == 'reg':
-                        x_all = [x_1]
-                    else:
-                        x_all = [x_1]
 
-                cnt = 0
-                yield (x_all, y_)
-                x, y =[], []
-        # 使用fit的时候, return返回
-        if fit_type=='fit':
-            # 通过两种方式处理: 1.嵌入类型(bert, word2vec, random), 2.条件随机场(CRF:'pad', 'reg')类型
-            if embedding_type in ['bert', 'albert']:
-                x_, y_ = np.array(x), np.array(y)
-                x_1 = np.array([x[0] for x in x_])
-                x_2 = np.array([x[1] for x in x_])
-                x_3 = np.array([x[2] for x in x_])
-                if crf_mode=='pad':
-                    x_all = [x_1, x_2, x_3]
-                elif crf_mode=='reg':
-                    x_all = [x_1, x_2]
-                else:
-                    x_all = [x_1, x_2]
+        # 通过两种方式处理: 1.嵌入类型(bert, word2vec, random), 2.条件随机场(CRF:'pad', 'reg')类型
+        if embedding_type in ['bert', 'albert']:
+            x_, y_ = np.array(x), np.array(y)
+            x_1 = np.array([x[0] for x in x_])
+            x_2 = np.array([x[1] for x in x_])
+            x_3 = np.array([x[2] for x in x_])
+            if crf_mode == 'pad':
+                x_all = [x_1, x_2, x_3]
+            elif crf_mode == 'reg':
+                x_all = [x_1, x_2]
             else:
-                x_, y_ = np.array(x), np.array(y)
-                x_1 = np.array([x[0] for x in x_])
-                x_2 = np.array([x[1] for x in x_])
-                if crf_mode=='pad':
-                    x_all = [x_1, x_2]
-                elif crf_mode=='reg':
-                    x_all = x_1
-                else:
-                    x_all = x_1
-                    # 使用fit的时候, return返回
-            return x_all, y_
-
-
+                x_all = [x_1, x_2]
+        else:
+            x_, y_ = np.array(x), np.array(y)
+            x_1 = np.array([x[0] for x in x_])
+            x_2 = np.array([x[1] for x in x_])
+            if crf_mode == 'pad':
+                x_all = [x_1, x_2]
+            elif crf_mode == 'reg':
+                x_all = x_1
+            else:
+                x_all = x_1
+                # 使用fit的时候, return返回
+        return x_all, y_

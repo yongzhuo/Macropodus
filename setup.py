@@ -7,7 +7,7 @@
 
 
 from macropodus.version import __version__
-from setuptools import setup
+from setuptools import find_packages, setup
 import codecs
 
 
@@ -32,8 +32,7 @@ setup(name=NAME,
         author=AUTHOR,
         author_email=EMAIL,
         url=URL,
-        packages=['macropodus'],
-        package_dir={'macropodus': 'macropodus'},
+        packages=find_packages(exclude=('test')),
         package_data={'macropodus': ['*.*', 'data/*', 'data/dict/*', 'data/cache/*',
                                      'data/embedding/*', 'data/embedding/word2vec/*']},
         install_requires=install_requires,

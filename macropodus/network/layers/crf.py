@@ -103,8 +103,8 @@ class CRF(tf.keras.layers.Layer):
                                                                              self.sequence_lengths,
                                                                              transition_params=self.transitions)
         # loss_crf = tf.reduce_mean(-log_likelihood)
-        return tf.reduce_mean(-log_likelihood)
         # return tf.math.log(loss_crf)
+        return tf.reduce_mean(-log_likelihood)
 
     def compute_output_shape(self, input_shape):
         if self.mode == 'pad':
