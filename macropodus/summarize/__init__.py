@@ -5,6 +5,8 @@
 # @function: text summarize
 
 
+import time
+time_start = time.time()
 # text_summarize of extractive
 from macropodus.summarize.feature_base.word_significance import WordSignificanceSum
 from macropodus.summarize.feature_base.text_pronouns import TextPronounsSum
@@ -17,7 +19,6 @@ from macropodus.summarize.topic_base.topic_lsi import LSISum
 from macropodus.summarize.topic_base.topic_nmf import NMFSum
 
 from macropodus.summarize.nous_base.lead_3 import Lead3Sum
-
 
 # feature
 wss = WordSignificanceSum()
@@ -51,7 +52,7 @@ nmf = nms.summarize
 # keyword
 keyword = trk.keyword
 
-
+# 函数接口
 def summarization(text, num=320, type_summarize="lda", topic_min=6, judge_topic=False, alpha=0.6, type_l='mix', model_type="textrank_sklearn", title=None):
     """
         文本摘要汇总

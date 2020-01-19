@@ -25,6 +25,7 @@ unit_step = ["万", "亿", "兆"]
 
 class Chi2Num():
     def __init__(self):
+        self.algorithm = "chinese2number"
         self.result = 0.0
         self.result_last = 0.0
         # 字符串分离
@@ -207,6 +208,7 @@ class Num2Chi():
        codes reference: https://github.com/tyong920/a2c
     """
     def __init__(self):
+        self.algorithm = "number2chinese"
         self.result = ""
 
     def number_to_str(self, data):

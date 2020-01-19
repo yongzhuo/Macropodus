@@ -1,16 +1,16 @@
 <p align="center">
-    <img src="macropodus_images/macropodus_logo.png" width="320"\>
+    <img src="test/images/macropodus_logo.png" width="480"\>
 </p>
 
 # [Macropodus](https://github.com/yongzhuo/Macropodus)
-
+![PyPI - Python Version](https://img.shields.io/badge/python-3.6-blue.svg) 
 [![PyPI](https://img.shields.io/pypi/v/Macropodus)](https://pypi.org/project/Macropodus/)
-[![Build Status](https://travis-ci.com/yongzhuo/Macropodus.svg?branch=master)](https://travis-ci.com/yongzhuo/Macropodus)
+[![GitHub](https://img.shields.io/github/license/mashape/apistatus.svg)](https://img.shields.io/github/license/mashape/apistatus.svg) 
 [![PyPI_downloads](https://img.shields.io/pypi/dm/Macropodus)](https://pypi.org/project/Macropodus/)
 [![Stars](https://img.shields.io/github/stars/yongzhuo/Macropodus?style=social)](https://github.com/yongzhuo/Macropodus/stargazers)
 [![Forks](https://img.shields.io/github/forks/yongzhuo/Macropodus.svg?style=social)](https://github.com/yongzhuo/Macropodus/network/members)
 [![Join the chat at https://gitter.im/yongzhuo/Macropodus](https://badges.gitter.im/yongzhuo/Macropodus.svg)](https://gitter.im/yongzhuo/Macropodus?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
->>> Macropodus是一个以Albert+BiLSTM+CRF网络结构为基础，用大规模中文语料训练的自然语言处理工具包。将提供中文分词、命名实体识别、关键词抽取、文本摘要、新词发现、文本相似度、计算器、数字转化等常见NLP功能。
+>>> Macropodus是一个以Albert+BiLSTM+CRF网络架构为基础，用大规模中文语料训练的自然语言处理工具包。将提供中文分词、命名实体识别、关键词抽取、文本摘要、新词发现、文本相似度、计算器、数字转换、拼音转换、繁简转换等常见NLP功能。
 
 
 ## 目录
@@ -42,6 +42,8 @@ import macropodus
 sen_calculate = "23 + 13 * (25+(-9-2-5-2*3-6/3-40*4/(2-3)/5+6*3))加根号144你算得几多"
 sen_chi2num = "三千零七十八亿三千零十五万零三百一十二点一九九四"
 sen_num2chi = 1994.1994
+sen_roman2int = "IX"
+sen_int2roman = 132
 sent1 = "PageRank算法简介"
 sent2 = "百度百科如是介绍他的思想:PageRank通过网络浩瀚的超链接关系来确定一个页面的等级。"
 summary = "PageRank算法简介。" \
@@ -83,6 +85,19 @@ res_chi2num = macropodus.chi2num(sen_chi2num)
 print(res_chi2num)
 res_num2chi = macropodus.num2chi(sen_num2chi)
 print(res_num2chi)
+# 阿拉伯数字与罗马数字相互转化
+res_roman2int = macropodus.roman2int(sen_roman2int)
+print(res_roman2int)
+res_int2roman = macropodus.int2roman(sen_int2roman)
+print(res_int2roman)
+# 中文汉字转拼音
+res_pinyin = macropodus.pinyin(summary)
+print(res_pinyin)
+# 中文繁简转化
+res_zh2han = macropodus.zh2han(summary)
+print(res_zh2han)
+res_han2zh = macropodus.han2zh(res_zh2han)
+print(res_han2zh)
 
 ```
 
@@ -216,6 +231,8 @@ import macropodus
 sen_calculate = "23 + 13 * (25+(-9-2-5-2*3-6/3-40*4/(2-3)/5+6*3))加根号144你算得几多"
 sen_chi2num = "三千零七十八亿三千零十五万零三百一十二点一九九四"
 sen_num2chi = 1994.1994
+sen_roman2num = "IX"
+sen_num2roman = 132
 # tookit, 科学计算器
 score_calcul = macropodus.calculate(sen_calculate)
 print(score_calcul)
@@ -225,7 +242,35 @@ print(res_chi2num)
 # tookit, 阿拉伯数字转中文
 res_num2chi = macropodus.num2chi(sen_num2chi)
 print(res_num2chi)
+# tookit, 阿拉伯数字转罗马数字
+res_roman2num = macropodus.roman2num(sen_roman2num)
+print(res_roman2num)
+# tookit, 罗马数字转阿拉伯数字
+res_num2roman = macropodus.num2roman(sen_num2roman)
+print(res_num2roman)
+# 中文汉字转拼音
+res_pinyin = macropodus.pinyin(summary)
+print(res_pinyin)
+# 中文繁体转简体
+res_zh2han = macropodus.zh2han(summary)
+print(res_zh2han)
+# 中文简体转繁体
+res_han2zh = macropodus.han2zh(res_zh2han)
+print(res_han2zh)
 
+```
+
+## 命名实体提取
+   albert+bilstm+crf网络架构, 最大支持126个字符, 需要安装tensorflow==1.15.0和下载模型
+
+```python3
+import macropodus
+
+summary = "美丽的广西是我国华南地区的一颗璀璨的明珠,山清水秀生态美,风生水起万象新。"
+res_ner = macropodus.ner(summary)
+print(res_ner)
+res_ners = macropodus.ners([summary])
+print(res_ners)
 ```
 
 # 参考/引用

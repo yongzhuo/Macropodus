@@ -51,7 +51,7 @@ class LDASum:
         tf_ngram = tfidf_fit(self.sentences_cut)
         # 主题数, 经验判断
         topic_num = min(topic_min, int(len(sentences_cut) / 2))  # 设定最小主题数为3
-        lda = LatentDirichletAllocation(n_topics=topic_num, max_iter=32,
+        lda = LatentDirichletAllocation(n_components=topic_num, max_iter=32,
                                         learning_method='online',
                                         learning_offset=50.,
                                         random_state=2019)

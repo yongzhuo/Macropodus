@@ -5,13 +5,12 @@
 # @function :embeddings of model, base embedding of random, word2vec or bert
 
 
-from macropodus.preprocess.tools_common import load_json, save_json, txt_read, txt_write
+from macropodus.preprocess.tools_ml import extract_chinese, macropodus_cut, get_ngrams, gram_uni_bi_tri
+from macropodus.preprocess.tools_common import save_json, load_json, txt_read, txt_write
 from macropodus.conf.path_config import path_embedding_bert, path_embedding_albert
 from macropodus.network.layers.non_mask_layer import NonMaskingLayer
 from macropodus.conf.path_config import path_embedding_word2vec_char
 from macropodus.conf.path_config import path_embedding_random_char
-from macropodus.preprocess.tools_ml import extract_chinese
-from macropodus.preprocess.tools_ml import macropodus_cut
 from macropodus.conf.path_config import path_model_dir
 from macropodus.conf.path_log import get_logger_root
 from gensim.models import KeyedVectors
@@ -36,7 +35,11 @@ class BaseEmbedding:
 
         # 自适应, 根据level_type和embedding_type判断corpus_path
         if self.level_type == "word":
-            if self.embedding_type == "bert":
+            if self.embedding_type == "random":
+                self.corpus_path = hyper_parameters['embedding'].get('corpus_path', path_embedding_random_char)
+            elif self.embedding_type == "word2vec":
+                self.corpus_path = hyper_parameters['embedding'].get('corpus_path', path_embedding_word2vec_char)
+            elif self.embedding_type == "bert":
                 raise RuntimeError("bert level_type is 'char', not 'word'")
             elif self.embedding_type == "xlnet":
                 raise RuntimeError("xlnet level_type is 'char', not 'word'")
@@ -55,6 +58,13 @@ class BaseEmbedding:
                 self.corpus_path = hyper_parameters['embedding'].get('corpus_path', path_embedding_albert)
             else:
                 raise RuntimeError("embedding_type must be 'random', 'word2vec' or 'bert'")
+        elif self.level_type == "ngram":
+            if self.embedding_type == "random":
+                self.corpus_path = hyper_parameters['embedding'].get('corpus_path')
+                if not self.corpus_path:
+                    raise RuntimeError("corpus_path must exists!")
+            else:
+                raise RuntimeError("embedding_type must be 'random', 'word2vec' or 'bert'")
         else:
             raise RuntimeError("level_type must be 'char' or 'word'")
         # 定义的符号
@@ -64,6 +74,7 @@ class BaseEmbedding:
                         '[EOS]': 3, }
         self.deal_corpus()
         self.build()
+        logger.info("Embedding init ok!")
 
     def deal_corpus(self):  # 处理语料
         pass
@@ -89,7 +100,7 @@ class BaseEmbedding:
             text_index = [self.token2idx[text_char] if text_char in self.token2idx else self.token2idx['[UNK]'] for
                           text_char in text[0:self.len_max]]
         input_mask = min(len(text), self.len_max)
-        return text_index, input_mask
+        return [text_index, input_mask]
 
     def idx2sentence(self, idx):
         assert type(idx) == list
@@ -99,37 +110,40 @@ class BaseEmbedding:
 
 class RandomEmbedding(BaseEmbedding):
     def __init__(self, hyper_parameters):
+        self.ngram_ns = hyper_parameters['embedding'].get('ngram_ns', [1, 2, 3]) # ngram信息, 根据预料获取
         super().__init__(hyper_parameters)
         # self.path = hyper_parameters.get('corpus_path', path_embedding_random_char)
 
     def deal_corpus(self):
+        import json
+
         token2idx = self.ot_dict.copy()
-        count = 3
         if 'term' in self.corpus_path:
             with open(file=self.corpus_path, mode='r', encoding='utf-8') as fd:
                 while True:
                     term_one = fd.readline()
                     if not term_one:
                         break
-                    term_one = term_one.strip()
                     if term_one not in token2idx:
-                        count = count + 1
-                        token2idx[term_one] = count
-
-        elif 'corpus' in self.corpus_path:
+                        token2idx[term_one] = len(token2idx)
+        elif os.path.exists(self.corpus_path):
             with open(file=self.corpus_path, mode='r', encoding='utf-8') as fd:
                 terms = fd.readlines()
-                for term_one in terms:
+                for line in terms:
+                    ques_label = json.loads(line.strip())
+                    term_one = ques_label["question"]
+                    term_one = "".join(term_one)
                     if self.level_type == 'char':
                         text = list(term_one.replace(' ', '').strip())
                     elif self.level_type == 'word':
                         text = macropodus_cut(term_one)
+                    elif self.level_type == 'ngram':
+                        text = get_ngrams(term_one, ns=self.ngram_ns)
                     else:
-                        raise RuntimeError("your input level_type is wrong, it must be 'word' or 'char'")
+                        raise RuntimeError("your input level_type is wrong, it must be 'word', 'char', 'ngram'")
                     for text_one in text:
                         if term_one not in token2idx:
-                            count = count + 1
-                            token2idx[text_one] = count
+                            token2idx[text_one] = len(token2idx)
         else:
             raise RuntimeError("your input corpus_path is wrong, it must be 'dict' or 'corpus'")
         self.token2idx = token2idx
@@ -139,12 +153,13 @@ class RandomEmbedding(BaseEmbedding):
 
     def build(self, **kwargs):
         self.vocab_size = len(self.token2idx)
-        self.input = tf.keras.layers.Input(shape=(self.len_max,), dtype='int32')
-        self.output = tf.keras.layers.Embedding(self.vocab_size,
-                                self.embed_size,
-                                input_length=self.len_max,
-                                trainable=self.trainable,
-                                )(self.input)
+        logger.info("vocab_size is {}".format(str(self.vocab_size)))
+        self.input = tf.keras.layers.Input(shape=(self.len_max,), dtype='int32', name="input")
+        self.output = tf.keras.layers.Embedding(self.vocab_size+1,
+                                                self.embed_size,
+                                                input_length=self.len_max,
+                                                trainable=self.trainable,
+                                                name="embedding_{}".format(str(self.embed_size)))(self.input)
         self.model = tf.keras.Model(self.input, self.output)
         save_json(json_lines=self.token2idx, json_path=os.path.join(self.path_model_dir, 'vocab.txt'))
 
@@ -179,15 +194,17 @@ class WordEmbedding(BaseEmbedding):
             self.idx2token[value] = key
 
         self.vocab_size = len(self.token2idx)
+        logger.info("vocab_size is {}".format(str(self.vocab_size)))
         embedding_matrix = np.array(embedding_matrix)
         # self.input = Input(shape=(self.len_max,), dtype='int32')
-        self.input = tf.keras.layers.Input(shape=(self.len_max,), dtype='int32')
+        self.input = tf.keras.layers.Input(shape=(self.len_max,), dtype='int32', name="input")
 
         self.output = tf.keras.layers.Embedding(self.vocab_size,
-                                self.embed_size,
-                                input_length=self.len_max,
-                                weights=[embedding_matrix],
-                                trainable=self.trainable)(self.input)
+                                                self.embed_size,
+                                                input_length=self.len_max,
+                                                weights=[embedding_matrix],
+                                                trainable=self.trainable,
+                                                name="embedding_{}".format(str(self.embed_size)))(self.input)
         self.model = tf.keras.Model(self.input, self.output)
         # 保存字/词典
         save_json(json_lines=self.token2idx, json_path=os.path.join(self.path_model_dir, 'vocab.txt'))
@@ -235,8 +252,8 @@ class BertEmbedding(BaseEmbedding):
             all_layers_select = []
             for all_layers_one in all_layers:
                 all_layers_select.append(all_layers_one)
-            encoder_layer = tf.keras.layers.Add()(all_layers_select)
-        self.output = NonMaskingLayer()(encoder_layer)
+            encoder_layer = tf.keras.layers.Add(name="layer_add_bert")(all_layers_select)
+        self.output = NonMaskingLayer(name="layer_non_masking_layer")(encoder_layer)
         self.input = model.inputs
         self.model = tf.keras.Model(self.input, self.output)
 
@@ -255,7 +272,7 @@ class BertEmbedding(BaseEmbedding):
         text = extract_chinese(str(text).upper())
         input_id, input_type_id = self.tokenizer.encode(first=text, second=second_text, max_len=self.len_max)
         input_mask = len([1 for ids in input_id if ids == 1])
-        return input_id, input_type_id, input_mask
+        return [input_id, input_type_id, input_mask]
         # input_mask = [0 if ids == 0 else 1 for ids in input_id]
         # return input_id, input_type_id, input_mask
         # return input_id, input_type_id
@@ -277,9 +294,9 @@ class AlbertEmbedding(BaseEmbedding):
         # 简要判别一下
         self.layer_indexes = [i if i in layer_real else -2 for i in self.layer_indexes]
         self.model = load_brightmart_albert_zh_checkpoint(self.corpus_path,
-                                                     training=self.trainable,
-                                                     seq_len=self.len_max,
-                                                     output_layers = None) # self.layer_indexes)
+                                                         training=self.trainable,
+                                                         seq_len=self.len_max,
+                                                         output_layers = None) # self.layer_indexes)
         # model_l = self.model.layers
         # logger.info('load albert model success!')
         # albert model all layers
@@ -307,9 +324,9 @@ class AlbertEmbedding(BaseEmbedding):
             all_layers_select = []
             for all_layers_one in all_layers:
                 all_layers_select.append(all_layers_one)
-            encoder_layer = tf.keras.layers.Add()(all_layers_select)
-        output = NonMaskingLayer()(encoder_layer)
-        self.output = [output]
+            encoder_layer = tf.keras.layers.Add(name="layer_add_albert")(all_layers_select)
+        output = NonMaskingLayer(name="layer_non_masking_layer")(encoder_layer)
+        self.output = output
         # self.output = [encoder_layer]
         self.input = self.model.inputs
         self.model = tf.keras.Model(self.input, self.output)
@@ -324,8 +341,8 @@ class AlbertEmbedding(BaseEmbedding):
         self.tokenizer = keras_bert.Tokenizer(self.token_dict)
 
     def sentence2idx(self, text, second_text=None):
-        text = extract_chinese(str(text).upper())
+        # text = extract_chinese(str(text).upper())
         input_id, input_type_id = self.tokenizer.encode(first=text, second=second_text, max_len=self.len_max)
         input_mask = len([1 for ids in input_id if ids ==1])
-        return input_id, input_type_id, input_mask
+        return [input_id, input_type_id, input_mask]
         # return [input_id, input_type_id]

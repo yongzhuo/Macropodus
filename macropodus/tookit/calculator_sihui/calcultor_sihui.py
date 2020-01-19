@@ -145,7 +145,7 @@ def StringToCalculateTwo(sentence=''):
 
 class Calculator:
     def __init__(self):
-        self.tookit = "calculator_sihui"
+        self.algorithm = "calculator_sihui"
 
     def calculator_sihui(self, sentence = ''):
         """

@@ -11,7 +11,8 @@ import os
 import re
 
 
-re_continue = re.compile('[A-Za-z0-9.@_]', re.U)
+re_continue = re.compile("[A-Za-z0-9.@_]", re.U)
+re_zh_cn = re.compile("([\u4E00-\u9FD5]+)", re.U)
 
 
 logger = get_logger_root()
@@ -137,3 +138,26 @@ def get_dir_files(path_dir):
     get_dir_files_func(_files, dir_list, path_dir)
     return _files
 
+
+def get_all_dirs_files(path_dir):
+    """
+        递归获取某个目录下的所有文件(所有层, 包括子目录)
+    :param path_dir: str, like '/home/data'
+    :return: list, like ['2020_01_08.txt']
+    """
+    path_files = []
+    def get_path_files(path_dir):
+        """
+            递归函数, 获取某个目录下的所有文件
+        :param path_dir: str, like '/home/data'
+        :return: list, like ['2020_01_08.txt']
+        """
+        for root, dirs, files in os.walk(path_dir):
+            for fi in files: # 递归的终止条件
+                path_file = os.path.join(root, fi)
+                path_files.append(path_file)
+            for di in dirs:  # 语间目录便继续递归
+                path_dir = os.path.join(root, di)
+                get_path_files(path_dir)
+    get_path_files(path_dir)
+    return path_files

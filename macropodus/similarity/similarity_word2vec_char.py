@@ -26,7 +26,7 @@ class SimW2vChar(W2v):
             try:
                 sentence_vec = sentence_vec + self.w2v_char.wv[word]
             except Exception as e:
-                sentence_vec = sentence_vec + 0.01  # unknow_know词加1
+                sentence_vec = sentence_vec + 0.01  # unknow_know词加0.01
         if type_encode == "avg":
             sentence_vec = sentence_vec / len_sent
         return sentence_vec

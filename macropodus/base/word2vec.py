@@ -15,7 +15,8 @@ import os
 
 
 logger = get_logger_root()
-gensim.logger.level=40
+gensim.logger.level=40 # gensim只打印ERROR信息等
+logger.info("path of w2v cache is {}!".format(path_macropodus_w2v_char_cache))
 
 
 class W2v:

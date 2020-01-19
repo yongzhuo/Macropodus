@@ -16,6 +16,7 @@ import os
 
 
 logger = get_logger_root()
+logger.info("path of dict cache is {}!".format(path_macropodus_dict_freq_cache))
 
 
 class SegBasic:

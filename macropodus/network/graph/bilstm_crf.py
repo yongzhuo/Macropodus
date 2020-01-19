@@ -5,8 +5,6 @@
 # @function: Bi-LSTM-CRF
 
 
-from macropodus.network.layers.keras_lookahead import Lookahead
-from macropodus.network.layers.keras_radam import RAdam
 from macropodus.network.base.graph import graph
 from macropodus.network.layers.crf import CRF
 import tensorflow as tf
@@ -43,7 +41,8 @@ class BilstmCRFGraph(graph):
                                          kernel_regularizer=tf.keras.regularizers.l2(self.l2 * 0.1),
                                          recurrent_regularizer=tf.keras.regularizers.l2(self.l2)
                                          ))(x)
-            x = tf.keras.layers.Dropout(self.dropout)(x)
+            # x = tf.keras.layers.Dropout(self.dropout)(x)
+        x = tf.keras.layers.Dense(units=128, activation=self.activate_rnn,)(x)
         # crf, 'pad' or 'reg'
         if self.crf_mode == "pad":
             # length of real sentence
@@ -71,17 +70,6 @@ class BilstmCRFGraph(graph):
           构建优化器、损失函数和评价函数
         :return: 
         """
-        if self.optimizer_name.upper() == "ADAM":
-            self.model.compile(optimizer=tf.keras.optimizers.Adam(lr=self.lr, beta_1=0.9, beta_2=0.999, decay=0.0),
-                               loss=self.crf.loss,
-                               metrics=[self.crf.viterbi_accuracy])  # Any optimize, [self.metrics])
-        elif self.optimizer_name.upper() == "RADAM":
-            self.model.compile(optimizer=RAdam(lr=self.lr, beta_1=0.9, beta_2=0.999, decay=0.0),
-                               loss=self.crf.loss,
-                               metrics=[self.crf.viterbi_accuracy]) # Any optimize
-        else:
-            self.model.compile(optimizer=RAdam(lr=self.lr, beta_1=0.9, beta_2=0.999, decay=0.0),
-                               loss=self.crf.loss,
-                               metrics=[self.crf.viterbi_accuracy]) # Any optimize
-            lookahead = Lookahead(k=5, alpha=0.5)  # Initialize Lookahead
-            lookahead.inject(self.model)  # add into model
+        self.loss = self.crf.loss
+        self.metrics = self.crf.viterbi_accuracy
+        super().create_compile()

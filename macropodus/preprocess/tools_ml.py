@@ -7,7 +7,6 @@
 
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
-import jieba.posseg as pseg
 import macropodus
 import re
 
@@ -38,6 +37,7 @@ def jieba_tag_cut(text):
     :param text:str 
     :return: dict
     """
+    import jieba.posseg as pseg
     words = pseg.cut(text)
     return dict(words)
 
@@ -48,7 +48,7 @@ def macropodus_cut(text):
     :param text: input sentence
     :return: list
     """
-    return macropodus.cut_dag(text)
+    return macropodus.cut(text)
 
 
 def cut_sentence(text, use_type="summarize"):

@@ -100,11 +100,9 @@ class graph:
           评价函数、早停
         :return: callback
         """
-        # import datetime
-        # self.path_model_dir = os.path.join(self.path_model_dir, "plugins/profile", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
-        cb_em = [tf.keras.callbacks.ModelCheckpoint(monitor="val_loss", mode="min", filepath=self.path_model, verbose=1, save_best_only=True, save_weights_only=False),
+        cb_em = [tf.keras.callbacks.ModelCheckpoint(monitor="loss", mode="min", filepath=self.path_model, verbose=1, save_best_only=True, save_weights_only=True),
                  tf.keras.callbacks.TensorBoard(log_dir=os.path.join(self.path_model_dir, "logs"), batch_size=self.batch_size, update_freq='batch'),
-                 tf.keras.callbacks.EarlyStopping(monitor="val_loss", mode="min", min_delta=1e-8, patience=self.patience),
+                 tf.keras.callbacks.EarlyStopping(monitor="loss", mode="min", min_delta=1e-8, patience=self.patience),
                  ]
         return cb_em
 
@@ -140,7 +138,7 @@ class graph:
         # 保存超参数
         self.hyper_parameters["model"]["is_training"] = False  # 预测时候这些设为False
         self.hyper_parameters["model"]["trainable"] = False
-        self.hyper_parameters["model"]["dropout"] = 1.0
+        self.hyper_parameters["model"]["dropout"] = 0.0
 
         save_json(json_lines=self.hyper_parameters, json_path=self.path_hyper_parameters)
         # 训练模型
@@ -164,34 +162,38 @@ class graph:
         # 保存超参数
         self.hyper_parameters["model"]["is_training"] = False  # 预测时候这些设为False
         self.hyper_parameters["model"]["trainable"] = False
-        self.hyper_parameters["model"]["dropout"] = 1.0
+        self.hyper_parameters["model"]["dropout"] = 0.0
 
         save_json(json_lines=self.hyper_parameters, json_path=self.path_hyper_parameters)
 
         pg = PreprocessGenerator(self.path_model_l2i_i2l)
-        _, len_train = pg.preprocess_label2set(self.hyper_parameters["data"]["train_data"])
+        _, len_train = pg.preprocess_label2set(self.hyper_parameters["data"]["train_data"], self.embedding_type)
         data_fit_generator = pg.preprocess_label_question_to_idx_fit_generator(embedding_type=self.hyper_parameters["embedding_type"],
                                                                                crf_mode=self.hyper_parameters["model"]["crf_mode"],
                                                                                path=self.hyper_parameters["data"]["train_data"],
                                                                                batch_size=self.batch_size,
                                                                                embed=embed,
-                                                                               rate=rate)
-        _, len_val = pg.preprocess_label2set(self.hyper_parameters["data"]["val_data"])
+                                                                               rate=rate,
+                                                                               epochs=self.epochs)
+        _, len_val = pg.preprocess_label2set(self.hyper_parameters["data"]["val_data"], self.embedding_type)
         data_dev_generator = pg.preprocess_label_question_to_idx_fit_generator(embedding_type=self.hyper_parameters["embedding_type"],
                                                                                crf_mode=self.hyper_parameters["model"]["crf_mode"],
                                                                                path=self.hyper_parameters["data"]["val_data"],
                                                                                batch_size=self.batch_size,
                                                                                embed=embed,
-                                                                               rate=rate)
-        steps_per_epoch = len_train // self.batch_size
-        validation_steps = len_val // self.batch_size
+                                                                               rate=rate,
+                                                                               epochs=self.epochs)
+        steps_per_epoch = (int(len_train*rate) if len_train > 500 else len_train)  // self.batch_size + 1
+        validation_steps = (int(len_val*rate) if len_val > 500 else len_val) // self.batch_size + 1
         # 训练模型
         self.model.fit_generator(generator=data_fit_generator,
                                  validation_data=data_dev_generator,
                                  callbacks=self.callback(),
                                  epochs=self.epochs,
                                  steps_per_epoch=steps_per_epoch,
-                                 validation_steps=validation_steps)
+                                 validation_steps=validation_steps,
+                                 shuffle=False
+                                 )
         # 保存embedding, 动态的
         if self.trainable:
             self.word_embedding.model.save(self.path_fineture)

@@ -5,6 +5,12 @@
 # @function :TrieTree of keywords find, 只返回查全的情况, 查找句子中的关键词（例如影视名、人名、关键词、实体等）
 
 
+from macropodus.conf.path_log import get_logger_root
+
+
+logger = get_logger_root()
+
+
 class TrieNode:
     """
         前缀树节点-链表
@@ -18,6 +24,7 @@ class TrieTree:
         前缀树构建, 新增关键词, 关键词词语查找等
     """
     def __init__(self):
+        self.algorithm = "trietree"
         self.root = TrieNode()
 
     def add_keyword(self, keyword):
@@ -37,20 +44,26 @@ class TrieTree:
             node_next = TrieNode()
             node_curr.child['[END]'] = node_next
         node_curr = node_curr.child['[END]']
+        logger.info("add {} success!".format("".join(keyword)))
 
-    # def delete_keyword(self, keyword):
-    #     """
-    #         删除一个关键词
-    #     :param keyword: str, 构建的关键词
-    #     :return: None
-    #     """
-    #     node_curr = self.root
-    #     for word in keyword:
-    #         if node_curr.child.get(word) is not None:
-    #             node_curr = node_curr.child[word]
-    #     # 每个关键词词后边, 加入end标志位
-    #     if node_curr.child.get('[END]') is not None:
-
+    def delete_keyword(self, keyword):
+        """
+            删除一个关键词
+        :param keyword: str, 构建的关键词
+        :return: None
+        """
+        node_curr = self.root
+        flag = 1
+        for word in keyword:
+            if node_curr.child.get(word) is not None:
+                node_curr = node_curr.child[word]
+            else:
+                flag = 0
+        # 每个关键词词后边, 加入end标志位
+        if node_curr.child.get('[END]') is not None and flag == 1:
+            node_curr.child.pop('[END]')
+        else:
+            logger.info("{} is not in trietree, delete keyword faild!".format("".join(keyword)))
 
     def add_keywords_from_list(self, keywords):
         """
@@ -124,6 +137,7 @@ def get_trie_tree_class(keywords):
 
 
 if __name__ == "__main__":
+    print("".join("你好呀"))
     # 测试1, class实例
     trie = TrieTree()
     keywords = ['英雄', '人在囧途', '那些年,我们一起追过的女孩', '流浪地球', '华娱',
@@ -134,8 +148,12 @@ if __name__ == "__main__":
     trie.add_keywords_from_list(keywords) # 创建树
     keyword = trie.find_keyword('第九区约会, 侏罗纪公园和泰坦尼克号泰坦尼克号')
     print(keyword)
+    gg = trie.delete_keyword('英雄')
+    gg = trie.delete_keyword('英雄3')
 
-    keyword = trie.match_keyword('第九')
+    keyword = trie.match_keyword('英雄')
+    keyword2 = trie.match_keyword('英雄2')
+
     print(keyword)
 
 
@@ -146,5 +164,3 @@ if __name__ == "__main__":
         input_ques = input()
         keywords = trie_tree.find_keyword(input_ques)
         print(keywords)
-
-

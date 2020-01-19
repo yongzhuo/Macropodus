@@ -32,13 +32,13 @@ fHandler.setLevel(logger_level)
 # 日志输出格式
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 fHandler.setFormatter(formatter)
-# 控制台输出
-console = logging.StreamHandler()
-console.setLevel(logger_level)
-console.setFormatter(formatter)
+# # 控制台输出
+# console = logging.StreamHandler()
+# console.setLevel(logger_level)
+# console.setFormatter(formatter)
 # logger加到handel里边
 logger.addHandler(fHandler)
-logger.addHandler(console)
+# logger.addHandler(console)
 
 
 def get_logger_root(name="macropodus"):

@@ -12,16 +12,7 @@ from macropodus.data.words_common.stop_words import stop_words
 from macropodus.preprocess.tools_ml import extract_chinese
 from macropodus.preprocess.tools_ml import cut_sentence
 from macropodus.preprocess.tools_ml import get_ngrams
-# import jieba.analyse as analyse
 from collections import Counter
-
-
-# # jieba预训练好的idf值
-# default_tfidf = analyse.default_tfidf
-# # 引入TF-IDF关键词抽取接口
-# tfidf = analyse.extract_tags
-# # 引入TextRank关键词抽取接口
-# textrank = analyse.textrank
 
 
 CHAR_PUMCTUATION = ',.:;?!`\'"[]{}<>。？！，、；：“” ‘’「」『』《》（）[]〔〕【】——……—-～·《》〈〉﹏﹏.___'
