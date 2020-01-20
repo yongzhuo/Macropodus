@@ -20,7 +20,7 @@ AUTHOR = 'yongzhuo'
 LICENSE = 'MIT'
 
 with codecs.open('README.md', 'r', 'utf8') as reader:
-    long_description = reader.read()
+    long_description = "\n".join(reader.readlines())
 with codecs.open('requirements.txt', 'r', 'utf8') as reader:
     install_requires = list(map(lambda x: x.strip(), reader.readlines()))
 
@@ -33,8 +33,13 @@ setup(name=NAME,
         author_email=EMAIL,
         url=URL,
         packages=find_packages(exclude=('test')),
-        package_data={'macropodus': ['*.*', 'data/*', 'data/dict/*', 'data/cache/*',
-                                     'data/embedding/*', 'data/embedding/word2vec/*']},
+      package_data={'macropodus': ['*.*', 'data/*', 'data/dict/*',
+                                   'data/embedding/*', 'data/embedding/word2vec/*',
+                                   'data/model/*', 'data/model/ner_albert_people_1998/*',
+                                   'data/model/tag_albert_people_1998/*'],
+                    'test': ['*.*', 'evaluate/*', 'evaluate/data/*', 'images/*',
+                             'style_data/*', 'version_and_enhance/*']
+                    },
         install_requires=install_requires,
         license=LICENSE,
         classifiers=['License :: OSI Approved :: MIT License',
@@ -50,7 +55,7 @@ setup(name=NAME,
 if __name__ == "__main__":
     print("setup ok!")
 
-# 说明, tensorflow>=1.14.0 or tensorflow-gpu>=1.14.0
+# 说明, tensorflow>=1.13.0 or tensorflow-gpu>=1.13.0
 # 项目工程目录这里Macropodus, 实际上, 下边还要有一层macropodus, 也就是说, macropodus和setup同一层
 # data包里必须要有__init__.py, 否则文件不会生成, .py文件才能copy
 # 编译的2种方案:

@@ -43,7 +43,11 @@ try:
     ner_albert_bilstm_crf = AlbertBilstmPredict(path_ner_albert_bilstm_crf, custom_objects)
     ner = ner_albert_bilstm_crf.predict_single
     ners = ner_albert_bilstm_crf.predict
-
+    # 加载训练好的模型, 词性标注
+    path_tag_albert_bilstm_crf = os.path.join(path_model_dir, 'tag_albert_people_1998')
+    tag_albert_bilstm_crf = AlbertBilstmPredict(path_tag_albert_bilstm_crf, custom_objects)
+    postag = tag_albert_bilstm_crf.pos_tag
+    postags = tag_albert_bilstm_crf.pos_tags
     # # layers
     # preprocessing = keras.preprocessing
     # applications = keras.applications

@@ -221,6 +221,35 @@ print(sents)
 
 ```
 
+## 命名实体提取
+   ner, albert+bilstm+crf网络架构, 最大支持126个字符;
+   需要安装tensorflow==1.15.0(pip安装不默认下载, 1.15.0以下未实验, 1.13以上应该可以)
+   需要下载模型(pip安装不默认下载, 将ner_albert_people_1998覆盖到安装目录macropodus/data/model);
+
+```python3
+import macropodus
+
+summary = "美丽的广西是我国华南地区的一颗璀璨的明珠,山清水秀生态美,风生水起万象新。"
+res_ner = macropodus.ner(summary)
+print(res_ner)
+res_ners = macropodus.ners([summary])
+print(res_ners)
+```
+
+## 词性标注
+   pos tag, albert+bilstm+crf网络架构, 最大支持126个字符;
+   需要安装tensorflow==1.15.0(pip安装不默认下载, 1.15.0以下未实验, 1.13以上应该可以)
+   需要下载模型(pip安装不默认下载, 将tag_albert_people_1998覆盖到安装目录macropodus/data/model);
+
+```python3
+import macropodus
+
+summary = "美丽的广西是我国华南地区的一颗璀璨的明珠,山清水秀生态美,风生水起万象新。"
+res_postag = macropodus.postag(summary)
+print(res_postag)
+res_postags = macropodus.postags([summary])
+print(res_postags)
+```
 
 ## 常用小工具(tookit)
 
@@ -260,18 +289,6 @@ print(res_han2zh)
 
 ```
 
-## 命名实体提取
-   albert+bilstm+crf网络架构, 最大支持126个字符, 需要安装tensorflow==1.15.0和下载模型
-
-```python3
-import macropodus
-
-summary = "美丽的广西是我国华南地区的一颗璀璨的明珠,山清水秀生态美,风生水起万象新。"
-res_ner = macropodus.ner(summary)
-print(res_ner)
-res_ners = macropodus.ners([summary])
-print(res_ners)
-```
 
 # 参考/引用
 * textrank_gensim: [https://github.com/RaRe-Technologies/gensim](https://github.com/RaRe-Technologies/gensim)
