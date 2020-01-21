@@ -5,8 +5,8 @@
 # @function :extract number from sentence of chinese or mix。提取数字,中文，或者混合中文-阿拉伯数字
 
 
-import regex as re
-# import re
+# import regex as re
+import re
 
 
 # * 字符串预处理模块，为分析器TimeNormalizer提供相应的字符串预处理服务
@@ -82,12 +82,14 @@ class StringPreHandler:
         for m in match:
             target = pattern.sub(str(cls.wordToNumber(m.group())), target, 1)
 
-        pattern = re.compile(u"(?<=(周|星期))[末天日]")
+        # pattern = re.compile(u"(?<=(周|星期))[末天日]")
+        pattern = re.compile(u"((?<=周)[末天日])|((?<=星期)[末天日])")
         match = pattern.finditer(target)
         for m in match:
             target = pattern.sub(str(cls.wordToNumber(m.group())), target, 1)
 
-        pattern = re.compile(u"(?<!(周|星期))0?[0-9]?十[0-9]?")
+        # pattern = re.compile(u"(?<!(周|星期))0?[0-9]?十[0-9]?")
+        pattern = re.compile(u"((?<!(周))0?[0-9]?十[0-9]?)|(?<!(星期))0?[0-9]?十[0-9]?")
         match = pattern.finditer(target)
         for m in match:
             group = m.group()
@@ -204,7 +206,8 @@ def extract_number(sentence):
         find_list.append(i.group())
     return find_list
 
+
 if __name__ == '__main__':
-    sen = "1000.一加1等于几"
+    sen = "1000.一加1等于几，周末和星期天，星期一星期二"
     res = extract_number(sen)
     print(res)

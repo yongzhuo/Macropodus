@@ -35,10 +35,7 @@ setup(name=NAME,
         packages=find_packages(exclude=('test')),
       package_data={'macropodus': ['*.*', 'data/*', 'data/dict/*',
                                    'data/embedding/*', 'data/embedding/word2vec/*',
-                                   'data/model/*', 'data/model/ner_albert_people_1998/*',
-                                   'data/model/tag_albert_people_1998/*'],
-                    'test': ['*.*', 'evaluate/*', 'evaluate/data/*', 'images/*',
-                             'style_data/*', 'version_and_enhance/*']
+                                   'data/model/*']
                     },
         install_requires=install_requires,
         license=LICENSE,
@@ -69,3 +66,8 @@ if __name__ == "__main__":
 # 方案二
 # python setup.py bdist_wheel --universal
 # twine upload dist/*
+
+#
+# conda remove -n py35 --all
+# conda create -n py351 python=3.5
+

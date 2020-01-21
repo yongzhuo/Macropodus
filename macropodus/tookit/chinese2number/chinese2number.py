@@ -199,7 +199,8 @@ class Chi2Num():
                     result_pos += text_end[i]
             # 拼接
             self.result_last = float(self.result_start + result_pos) if result_pos.isdigit() else self.result_start
-
+        else:
+            self.result_last =self.compose_integer(text)
         return self.result_last
 
 

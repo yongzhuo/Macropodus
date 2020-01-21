@@ -10,7 +10,7 @@
 [![Stars](https://img.shields.io/github/stars/yongzhuo/Macropodus?style=social)](https://github.com/yongzhuo/Macropodus/stargazers)
 [![Forks](https://img.shields.io/github/forks/yongzhuo/Macropodus.svg?style=social)](https://github.com/yongzhuo/Macropodus/network/members)
 [![Join the chat at https://gitter.im/yongzhuo/Macropodus](https://badges.gitter.im/yongzhuo/Macropodus.svg)](https://gitter.im/yongzhuo/Macropodus?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
->>> Macropodus是一个以Albert+BiLSTM+CRF网络架构为基础，用大规模中文语料训练的自然语言处理工具包。将提供中文分词、命名实体识别、关键词抽取、文本摘要、新词发现、文本相似度、计算器、数字转换、拼音转换、繁简转换等常见NLP功能。
+>>> Macropodus是一个以Albert+BiLSTM+CRF网络架构为基础，用大规模中文语料训练的自然语言处理工具包。将提供中文分词、词性标注、命名实体识别、关键词抽取、文本摘要、新词发现、文本相似度、计算器、数字转换、拼音转换、繁简转换等常见NLP功能。
 
 
 ## 目录
@@ -222,9 +222,9 @@ print(sents)
 ```
 
 ## 命名实体提取
-   ner, albert+bilstm+crf网络架构, 最大支持126个字符;
-   需要安装tensorflow==1.15.0(pip安装不默认下载, 1.15.0以下未实验, 1.13以上应该可以)
-   需要下载模型(pip安装不默认下载, 将ner_albert_people_1998覆盖到安装目录macropodus/data/model);
+   * ner, albert+bilstm+crf网络架构, 最大支持126个字符; 
+   * 需要安装tensorflow==1.15.0(pip安装不默认下载, 1.15.0以下未实验, 1.13以上应该可以); 
+   * 需要下载模型(pip安装不默认下载, 将ner_albert_people_1998覆盖到安装目录macropodus/data/model);
 
 ```python3
 import macropodus
@@ -237,9 +237,9 @@ print(res_ners)
 ```
 
 ## 词性标注
-   pos tag, albert+bilstm+crf网络架构, 最大支持126个字符;
-   需要安装tensorflow==1.15.0(pip安装不默认下载, 1.15.0以下未实验, 1.13以上应该可以)
-   需要下载模型(pip安装不默认下载, 将tag_albert_people_1998覆盖到安装目录macropodus/data/model);
+   * pos tag, albert+bilstm+crf网络架构, 最大支持126个字符; 
+   * 需要安装tensorflow==1.15.0(pip安装不默认下载, 1.15.0以下未实验, 1.13以上应该可以); 
+   * 需要下载模型(pip安装不默认下载, 将tag_albert_people_1998覆盖到安装目录macropodus/data/model);
 
 ```python3
 import macropodus
@@ -253,7 +253,7 @@ print(res_postags)
 
 ## 常用小工具(tookit)
 
-  工具包括科学计算器, 阿拉伯-中文数字转化
+  工具包括科学计算器, 中文繁体-简体转换, 阿拉伯-中文数字转换, 罗马数字-阿拉伯数字转换, 中文拼音
 ```python3
 import macropodus
 

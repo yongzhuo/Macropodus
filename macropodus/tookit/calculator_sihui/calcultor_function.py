@@ -14,7 +14,6 @@ import re
 logger = get_logger_root()
 
 
-
 def rackets_replace(rackets_char, myformula):
     """
         将2(3换成2*(3, 3)4换成3)*4
