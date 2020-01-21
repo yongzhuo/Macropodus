@@ -32,8 +32,8 @@ setup(name=NAME,
         author=AUTHOR,
         author_email=EMAIL,
         url=URL,
-        packages=find_packages(exclude=('test')),
-      package_data={'macropodus': ['*.*', 'data/*', 'data/dict/*',
+        packages=find_packages(),    # (exclude=('test')),
+        package_data={'macropodus': ['*.*', 'data/*', 'data/dict/*',
                                    'data/embedding/*', 'data/embedding/word2vec/*',
                                    'data/model/*']
                     },
@@ -55,6 +55,11 @@ if __name__ == "__main__":
 # 说明, tensorflow>=1.13.0 or tensorflow-gpu>=1.13.0
 # 项目工程目录这里Macropodus, 实际上, 下边还要有一层macropodus, 也就是说, macropodus和setup同一层
 # data包里必须要有__init__.py, 否则文件不会生成, .py文件才能copy
+
+# anaconda3创建环境
+# conda remove -n py35 --all
+# conda create -n py351 python=3.5
+
 # 编译的2种方案:
 
 # 方案一
@@ -67,7 +72,4 @@ if __name__ == "__main__":
 # python setup.py bdist_wheel --universal
 # twine upload dist/*
 
-#
-# conda remove -n py35 --all
-# conda create -n py351 python=3.5
 

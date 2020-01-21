@@ -22,7 +22,7 @@
 
 
 # 安装 
-1. 通过PyPI安装(自带模型文件)：
+1. 通过PyPI安装(模型文件另需下载, 详见[命名实体提取](##命名实体提取), [词性标注](##词性标注))：
 	```
 	pip install macropodus
 	```
@@ -291,6 +291,7 @@ print(res_han2zh)
 
 
 # 参考/引用
+* StringPreHandler(提取数字,纯数字):[https://github.com/zhanzecheng/Time_NLP](https://github.com/zhanzecheng/Time_NLP)
 * textrank_gensim: [https://github.com/RaRe-Technologies/gensim](https://github.com/RaRe-Technologies/gensim)
 * 最大概率(DAG-动态规划)词典分词: [https://github.com/fxsjy/jieba](https://github.com/fxsjy/jieba)
 * CRF(-未解决): [https://github.com/BrikerMan/Kashgari](https://github.com/BrikerMan/Kashgari)
