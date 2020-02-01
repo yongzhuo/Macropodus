@@ -225,6 +225,7 @@ print(sents)
    * ner, albert+bilstm+crf网络架构, 最大支持126个字符; 
    * 需要安装tensorflow==1.15.0(pip安装不默认下载, 1.15.0以下未实验, 1.13以上应该可以); 
    * 需要下载模型(pip安装不默认下载, 将ner_albert_people_1998覆盖到安装目录macropodus/data/model);
+   * 模型地址在[https://pan.baidu.com/s/1I3vydhmFEQ9nuPG2fDou8Q](https://pan.baidu.com/s/1I3vydhmFEQ9nuPG2fDou8Q), 提取码：rket;
 
 ```python3
 import macropodus
@@ -240,6 +241,7 @@ print(res_ners)
    * pos tag, albert+bilstm+crf网络架构, 最大支持126个字符; 
    * 需要安装tensorflow==1.15.0(pip安装不默认下载, 1.15.0以下未实验, 1.13以上应该可以); 
    * 需要下载模型(pip安装不默认下载, 将tag_albert_people_1998覆盖到安装目录macropodus/data/model);
+   * 模型地址在[https://pan.baidu.com/s/1I3vydhmFEQ9nuPG2fDou8Q](https://pan.baidu.com/s/1I3vydhmFEQ9nuPG2fDou8Q), 提取码：rket;
 
 ```python3
 import macropodus

@@ -222,3 +222,7 @@ if __name__ == "__main__":
     for es in equation_sample:
         print('ff算式: ' + es)
         print('思慧计算器结果: ' + str(cal.calculator_sihui(es)))
+    while True:
+        print("请输入:")
+        question = input()
+        print(cal.calculator_sihui(question))
