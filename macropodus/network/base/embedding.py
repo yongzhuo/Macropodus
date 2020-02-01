@@ -142,7 +142,7 @@ class RandomEmbedding(BaseEmbedding):
                     else:
                         raise RuntimeError("your input level_type is wrong, it must be 'word', 'char', 'ngram'")
                     for text_one in text:
-                        if term_one not in token2idx:
+                        if text_one not in token2idx:
                             token2idx[text_one] = len(token2idx)
         else:
             raise RuntimeError("your input corpus_path is wrong, it must be 'dict' or 'corpus'")
