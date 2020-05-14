@@ -22,7 +22,7 @@
 
 
 # 安装 
-1. 通过PyPI安装(模型文件另需下载, 详见[命名实体提取](##命名实体提取), [词性标注](##词性标注))：
+1. 通过PyPI安装(模型文件另需下载, 详见[命名实体提取](#命名实体提取), [词性标注](#词性标注))：
 	```
 	pip install macropodus
 	```
@@ -223,7 +223,7 @@ print(sents)
 
 ## 命名实体提取
    * ner, albert+bilstm+crf网络架构, 最大支持126个字符; 
-   * 需要安装tensorflow==1.15.0(pip安装不默认下载, 1.15.0以下未实验, 1.13以上应该可以); 
+   * 需要安装tensorflow==1.15.0, keras-bert==0.80.0, keras-adaptive-softmax==0.6.0(pip安装不默认下载, 1.15.0以下未实验, 1.13以上应该可以); 
    * 需要下载模型(pip安装不默认下载, 将ner_albert_people_1998覆盖到安装目录macropodus/data/model);
    * 模型地址在[https://pan.baidu.com/s/1I3vydhmFEQ9nuPG2fDou8Q](https://pan.baidu.com/s/1I3vydhmFEQ9nuPG2fDou8Q), 提取码：rket;
 
@@ -239,7 +239,7 @@ print(res_ners)
 
 ## 词性标注
    * pos tag, albert+bilstm+crf网络架构, 最大支持126个字符; 
-   * 需要安装tensorflow==1.15.0(pip安装不默认下载, 1.15.0以下未实验, 1.13以上应该可以); 
+   * 需要安装tensorflow==1.15.0, keras-bert==0.80.0, keras-adaptive-softmax==0.6.0(pip安装不默认下载, 1.15.0以下未实验, 1.13以上应该可以); 
    * 需要下载模型(pip安装不默认下载, 将tag_albert_people_1998覆盖到安装目录macropodus/data/model);
    * 模型地址在[https://pan.baidu.com/s/1I3vydhmFEQ9nuPG2fDou8Q](https://pan.baidu.com/s/1I3vydhmFEQ9nuPG2fDou8Q), 提取码：rket;
 
@@ -298,4 +298,15 @@ print(res_han2zh)
 * 最大概率(DAG-动态规划)词典分词: [https://github.com/fxsjy/jieba](https://github.com/fxsjy/jieba)
 * CRF(-未解决): [https://github.com/BrikerMan/Kashgari](https://github.com/BrikerMan/Kashgari)
 
-# FAQ
+
+# Reference
+For citing this work, you can refer to the present GitHub project. For example, with BibTeX:
+```
+@misc{Macropodus,
+    howpublished = {\url{https://github.com/yongzhuo/Macropodus}},
+    title = {Macropodus},
+    author = {Yongzhuo Mo},
+    publisher = {GitHub},
+    year = {2020}
+}
+```

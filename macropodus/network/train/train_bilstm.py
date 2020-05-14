@@ -200,6 +200,5 @@ def train_w2v(hyper_parameters=None, rate=1.0, path_train=None, path_val=None, p
     print("耗时:" + str(time.time() - time_start))
 
 
-
 if __name__=="__main__":
     train_w2v(rate=1)

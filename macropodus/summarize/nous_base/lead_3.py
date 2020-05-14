@@ -12,7 +12,7 @@ class Lead3Sum:
     def __init__(self):
         self.algorithm = 'lead_3'
 
-    def summarize(self, text, type_l='mix', num=320):
+    def summarize(self, text, num=320, type_l='mix'):
         """
             lead-s
         :param sentences: list

@@ -41,8 +41,8 @@ class BilstmCRFGraph(graph):
                                          kernel_regularizer=tf.keras.regularizers.l2(self.l2 * 0.1),
                                          recurrent_regularizer=tf.keras.regularizers.l2(self.l2)
                                          ))(x)
-            # x = tf.keras.layers.Dropout(self.dropout)(x)
-        x = tf.keras.layers.Dense(units=128, activation=self.activate_rnn,)(x)
+            x = tf.keras.layers.Dropout(self.dropout)(x)
+        x = tf.keras.layers.Dense(units=self.rnn_units, activation=self.activate_rnn,)(x)
         # crf, 'pad' or 'reg'
         if self.crf_mode == "pad":
             # length of real sentence

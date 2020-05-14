@@ -5,8 +5,6 @@
 # @function: text summarize
 
 
-import time
-time_start = time.time()
 # text_summarize of extractive
 from macropodus.summarize.feature_base.word_significance import WordSignificanceSum
 from macropodus.summarize.feature_base.text_pronouns import TextPronounsSum

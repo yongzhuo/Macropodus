@@ -134,7 +134,7 @@ def get_ngrams(text, ns=[1], use_type="summarize", len_max=7):
                     break
             if not ngram_n:
                 ngram_n.append(text)
-            ngrams += ngram_n
+            ngrams.append(ngram_n)
     else: # 只返回一个list
         for i in range(len_text):
             ngrams += [text[i: j + i]

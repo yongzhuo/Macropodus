@@ -41,6 +41,7 @@ class TextRankSum:
 
         return res
 
+
 class TextRankKey:
     def __init__(self):
         self.algorithm = 'keyword'

@@ -4,6 +4,7 @@
 # @author   :Mo
 # @function :textrank of word2vec, keyword and sentence
 
+
 from macropodus.similarity.similarity_word2vec_char import SimW2vChar
 from macropodus.data.words_common.stop_words import stop_words
 from macropodus.preprocess.tools_ml import macropodus_cut
@@ -87,7 +88,7 @@ class TextrankWord2vec(SimW2vChar):
         # 返回原句子和得分
         return [(sr[1], index2word[sr[0]]) for sr in sen_rank if len(index2word[sr[0]])>1 and score_min<=sr[1]][0:topk]
 
-    def summarize(self, text, num=320, type_sim="cosine", type_encode="avg", config={"alpha": 0.86, "max_iter":100}):
+    def summarize(self, text, num=320, type_sim="cosine", type_encode="avg", config={"alpha": 0.33, "max_iter":100}):
         """
             文本摘要抽取, textrank of word2vec cosine
         :param text: str, doc. like "大漠帝国是历史上存在的国家吗?你知不知道？嗯。"

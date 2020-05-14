@@ -36,11 +36,18 @@ path_ner_people_1998_train = os.path.join(path_root, "data/corpus/ner_people_199
 path_ner_people_1998_valid = os.path.join(path_root, "data/corpus/ner_people_1998/dev.json")
 # path of train data of seg pku 1998
 path_seg_pku_1998_train = os.path.join(path_root, "data/corpus/seg_pku_1998/train.json")
+path_seg_pku_1998_bi_train = os.path.join(path_root, "data/corpus/seg_pku_1998/train_BI_126.json")
 # path of train data of tag people 1998
 path_tag_people_1998_train = os.path.join(path_root, "data/corpus/tag_people_1998/train.json")
 # path of train data of tag people 2014
 path_tag_people_2014_train = os.path.join(path_root, "data/corpus/tag_people_2014/train.json")
 path_tag_people_2014_valid = os.path.join(path_root, "data/corpus/tag_people_2014/dev.json")
+# path of ccks_2020
+path_ccks_2020 = os.path.join(path_root, "data/ccks_8_data_v2_ner")
+
+path_ccks_2020_ner = os.path.join(path_root, "data/ccks_8_data_v2_ner/ccks_2020_ner.json")
+path_ccks_2020_ner_train = os.path.join(path_root, "data/ccks_8_data_v2_ner/train.json")
+path_ccks_2020_ner_dev = os.path.join(path_root, "data/ccks_8_data_v2_ner/dev.json")
 
 # path of training model save dir
 path_model_dir = os.path.join(path_root, "data", "model")

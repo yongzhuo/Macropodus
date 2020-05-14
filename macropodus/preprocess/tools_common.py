@@ -64,25 +64,25 @@ def txt_write(list_line, file_path, type='w', encode_type='utf-8'):
         logger.info(str(e))
 
 
-def save_json(json_lines, json_path):
+def save_json(json_lines, json_path, encoding='utf-8'):
     """
       保存json，
     :param json_lines: json 
     :param path: str
     :return: None
     """
-    with open(json_path, 'w', encoding='utf-8') as fj:
+    with open(json_path, 'w', encoding=encoding) as fj:
         fj.write(json.dumps(json_lines, ensure_ascii=False))
     fj.close()
 
 
-def load_json(path):
+def load_json(path, encoding="utf-8"):
     """
       获取json, json存储为[{}]格式, like [{'大漠帝国':132}]
     :param path: str
     :return: json
     """
-    with open(path, 'r', encoding='utf-8') as fj:
+    with open(path, 'r', encoding=encoding) as fj:
         model_json = json.load(fj)
     return model_json
 

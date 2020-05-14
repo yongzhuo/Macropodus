@@ -50,6 +50,7 @@ class graph:
         self.metrics = hyper_parameters_model.get("metrics", "accuracy")  # acc, binary_accuracy, categorical_accuracy, sparse_categorical_accuracy, sparse_top_k_categorical_accuracy
         self.is_training = hyper_parameters_model.get("is_training", False)  # 是否训练, 保存时候为Flase,方便预测
         self.patience = hyper_parameters_model.get("patience", 3)  # 早停, 2-3就可以了
+        self.kfold = hyper_parameters_model.get("kfold", 5)  # 交叉验证折数
         self.optimizer_name = hyper_parameters_model.get("optimizer_name", "RAdam,Lookahead")  # 早停, 2-3就可以了
         self.path_model_dir = hyper_parameters_model.get("path_model_dir", path_model_dir)  # 模型目录
         self.path_fineture = os.path.join(self.path_model_dir, "embedding_trainable.h5")  # embedding层保存地址, 例如静态词向量、动态词向量、微调bert层等
@@ -100,7 +101,11 @@ class graph:
           评价函数、早停
         :return: callback
         """
-        cb_em = [tf.keras.callbacks.ModelCheckpoint(monitor="loss", mode="min", filepath=self.path_model, verbose=1, save_best_only=True, save_weights_only=True),
+        cb_em = [tf.keras.callbacks.ModelCheckpoint(monitor="loss", mode="min",
+                                                    filepath=self.path_model,
+                                                    verbose=1,
+                                                    save_best_only=True,
+                                                    save_weights_only=True),
                  tf.keras.callbacks.TensorBoard(log_dir=os.path.join(self.path_model_dir, "logs"), batch_size=self.batch_size, update_freq='batch'),
                  tf.keras.callbacks.EarlyStopping(monitor="loss", mode="min", min_delta=1e-8, patience=self.patience),
                  ]
@@ -150,7 +155,7 @@ class graph:
         if self.trainable:
             self.word_embedding.model.save(self.path_fineture)
 
-    def fit_generator(self, embed, rate=1):
+    def fit_generator(self, embed, rate=1, encoding="utf-8"):
         """
 
         :param data_fit_generator: yield, 训练数据
@@ -167,24 +172,84 @@ class graph:
         save_json(json_lines=self.hyper_parameters, json_path=self.path_hyper_parameters)
 
         pg = PreprocessGenerator(self.path_model_l2i_i2l)
-        _, len_train = pg.preprocess_label2set(self.hyper_parameters["data"]["train_data"], self.embedding_type)
+        _, len_train = pg.preprocess_label2set(self.hyper_parameters["data"]["train_data"], self.embedding_type, encoding=encoding)
         data_fit_generator = pg.preprocess_label_question_to_idx_fit_generator(embedding_type=self.hyper_parameters["embedding_type"],
                                                                                crf_mode=self.hyper_parameters["model"]["crf_mode"],
                                                                                path=self.hyper_parameters["data"]["train_data"],
                                                                                batch_size=self.batch_size,
                                                                                embed=embed,
                                                                                rate=rate,
-                                                                               epochs=self.epochs)
-        _, len_val = pg.preprocess_label2set(self.hyper_parameters["data"]["val_data"], self.embedding_type)
+                                                                               epochs=self.epochs,
+                                                                               encoding=encoding)
+        _, len_val = pg.preprocess_label2set(self.hyper_parameters["data"]["val_data"], self.embedding_type, encoding=encoding)
         data_dev_generator = pg.preprocess_label_question_to_idx_fit_generator(embedding_type=self.hyper_parameters["embedding_type"],
                                                                                crf_mode=self.hyper_parameters["model"]["crf_mode"],
                                                                                path=self.hyper_parameters["data"]["val_data"],
                                                                                batch_size=self.batch_size,
                                                                                embed=embed,
                                                                                rate=rate,
-                                                                               epochs=self.epochs)
+                                                                               epochs=self.epochs,
+                                                                               encoding=encoding)
         steps_per_epoch = (int(len_train*rate) if len_train > 500 else len_train)  // self.batch_size + 1
         validation_steps = (int(len_val*rate) if len_val > 500 else len_val) // self.batch_size + 1
+        # 训练模型
+        self.model.fit_generator(generator=data_fit_generator,
+                                 validation_data=data_dev_generator,
+                                 callbacks=self.callback(),
+                                 epochs=self.epochs,
+                                 steps_per_epoch=steps_per_epoch,
+                                 validation_steps=validation_steps,
+                                 shuffle=True
+                                 )
+        # 保存embedding, 动态的
+        if self.trainable:
+            self.word_embedding.model.save(self.path_fineture)
+
+    def fit_generator_kfold(self, embed, rate=1, encoding="utf-8"):
+        """
+
+        :param data_fit_generator: yield, 训练数据
+        :param data_dev_generator: yield, 验证数据
+        :param steps_per_epoch: int, 训练一轮步数
+        :param validation_steps: int, 验证一轮步数
+        :return: 
+        """
+        # 保存超参数
+        self.hyper_parameters["model"]["is_training"] = False  # 预测时候这些设为False
+        self.hyper_parameters["model"]["trainable"] = False
+        self.hyper_parameters["model"]["dropout"] = 0.0
+
+        save_json(json_lines=self.hyper_parameters, json_path=self.path_hyper_parameters)
+
+        pg = PreprocessGenerator(self.path_model_l2i_i2l)
+        _, len_train = pg.preprocess_label2set(self.hyper_parameters["data"]["train_data"], self.embedding_type, encoding=encoding)
+        data_fit_generator = pg.preprocess_label_question_to_idx_fit_generator_kfold(embedding_type=self.hyper_parameters["embedding_type"],
+                                                                               crf_mode=self.hyper_parameters["model"]["crf_mode"],
+                                                                               path=self.hyper_parameters["data"]["train_data"],
+                                                                               batch_size=self.batch_size,
+                                                                               embed=embed,
+                                                                               rate=rate,
+                                                                               epochs=self.epochs,
+                                                                               encoding=encoding,
+                                                                               kfold=self.kfold,
+                                                                               flag="train"
+                                                                               )
+        _, len_val = pg.preprocess_label2set(self.hyper_parameters["data"]["val_data"], self.embedding_type, encoding=encoding)
+        data_dev_generator = pg.preprocess_label_question_to_idx_fit_generator_kfold(embedding_type=self.hyper_parameters["embedding_type"],
+                                                                               crf_mode=self.hyper_parameters["model"]["crf_mode"],
+                                                                               path=self.hyper_parameters["data"]["val_data"],
+                                                                               batch_size=self.batch_size,
+                                                                               embed=embed,
+                                                                               rate=rate,
+                                                                               epochs=self.epochs,
+                                                                               encoding=encoding,
+                                                                               kfold=self.kfold,
+                                                                               flag="dev"
+                                                                               )
+
+        steps_per_epoch = (int(len_train*rate*(self.kfold-1)/self.kfold) if len_train > 500 else len_train)  // self.batch_size + 1
+        validation_steps = (int(len_val*rate/self.kfold) if len_val > 500 else len_val) // self.batch_size + 1
+        self.patience *= self.kfold
         # 训练模型
         self.model.fit_generator(generator=data_fit_generator,
                                  validation_data=data_dev_generator,
