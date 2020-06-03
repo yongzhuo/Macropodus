@@ -4,6 +4,9 @@
 # @author  : Mo
 # @function: test macropodus
 
+# import os
+# os.environ['TF_KERAS'] = '1'
+
 
 import time
 time_start = time.time()

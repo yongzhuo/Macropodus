@@ -202,7 +202,7 @@ summary = "PageRank算法简介。" \
            "总的来说就是一句话，从全局角度考虑，获取重要的信。 "
            
 # 新词发现(findword, 默认接口)
-sents = macropodus.find(text=summary, freq_min=2, len_max=7, entropy_min=1.2, aggregation_min=0.5, use_avg=True)
+sents = macropodus.find(text=summary, use_type="text", use_avg=False, use_filter=False, use_output=True, freq_min=2, len_max=5, entropy_min=2.0, aggregation_min=3.2)
 print(sents)
 
 ```

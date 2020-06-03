@@ -64,7 +64,7 @@ def txt_write(list_line, file_path, type='w', encode_type='utf-8'):
         logger.info(str(e))
 
 
-def save_json(json_lines, json_path, encoding='utf-8'):
+def save_json(json_lines, json_path, encoding='utf-8', indent=4):
     """
       保存json，
     :param json_lines: json 
@@ -72,7 +72,7 @@ def save_json(json_lines, json_path, encoding='utf-8'):
     :return: None
     """
     with open(json_path, 'w', encoding=encoding) as fj:
-        fj.write(json.dumps(json_lines, ensure_ascii=False))
+        fj.write(json.dumps(json_lines, ensure_ascii=False, indent=indent))
     fj.close()
 
 
