@@ -9,7 +9,7 @@ from macropodus.base.word2vec import W2v
 
 
 class SimW2vChar(W2v):
-    def __init__(self, use_cache):
+    def __init__(self, use_cache=True):
         super().__init__(use_cache)
 
     def encode(self, sent, type_encode="other"):

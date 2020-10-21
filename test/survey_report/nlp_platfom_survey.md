@@ -89,3 +89,17 @@ PaddleNLP|c++|3.4k|6/1/!|是|是|是|是|是|是|是|是|是|是|Apache-2.0
 * ik-analyzer:[https://github.com/wks/ik-analyzer](https://github.com/wks/ik-analyzer)
 * fnlp:[https://github.com/FudanNLP/fnlp](https://github.com/FudanNLP/fnlp)
 * NLPIR:[https://github.com/NLPIR-team/NLPIR](https://github.com/NLPIR-team/NLPIR)
+
+###
+新词发现:
+1. Matrix67: The Aha Moments的信息熵方法: [互联网时代的社会语言学：基于SNS的文本数据挖掘](http://www.matrix67.com/blog/archives/5044)
+   1.词频、左右熵(丰度,字符组合左右邻字的丰富程度, -p*log(p))、
+   2.互信息(凝固度,内部凝聚程度, pmi = p(x,y)*log(p(x,y)/(p(x)*p(y))))等构建得分函数
+2. HanLP的长短语构造方法: [基于互信息和左右信息熵的短语提取识别](https://www.hankcs.com/nlp/extraction-and-identification-of-mutual-information-about-the-phrase-based-on-information-entropy.html)
+   1.切词(只统计词典)，统计词语共现(一阶、二阶、三阶)
+   2.左右熵、互信息。合并词典词语，构建短语
+3. SmoothNLP:["新词发现"算法探讨与优化-SmoothNLP](https://zhuanlan.zhihu.com/p/80385615)
+   1.左右熵权重: Ew =log((El*e^Er+Er*e^EL)/|Er-El|)
+   2.平均互信息AMI:(1/n) * log(p(w)/(p(1)p(2)...p(n)))
+   3.过滤条件:对在candidate ngram中, 首字或者尾字出现次数特别多的进行筛选, 如"XX的,美丽的,漂亮的"剔出字典
+

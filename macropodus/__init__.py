@@ -10,9 +10,9 @@ from macropodus.tookit import calculate, chi2num, num2chi, Trie, roman2num, num2
 from macropodus.segment import cut_bidirectional, cut_forward, cut_reverse, cut_search, cut_dag, cut, find
 from macropodus.segment import load_user_dict, save_delete_words, save_add_words, delete_word, add_word
 from macropodus.summarize import keyword, textrank, summarization
-from macropodus.__init_tf_keras import * # tf.python.keras, custom_objects
 from macropodus.version import __version__ # 版本
 from macropodus.similarity import sim
+import os
 
 # 机械分词
 cut_bidirectional = cut_bidirectional
@@ -49,3 +49,6 @@ num2roman = num2roman
 han2zh = han2zh
 zh2han = zh2han
 pinyin = pinyin
+
+if os.environ.get("macropodus_use_dl", False)=="1":
+   from macropodus.__init_tf_keras import * # tf.python.keras, custom_objects

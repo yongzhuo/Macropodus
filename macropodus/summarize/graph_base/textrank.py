@@ -8,8 +8,12 @@
 from macropodus.summarize.graph_base.textrank_word2vec import TextrankWord2vec
 from macropodus.summarize.graph_base.textrank_gensim import TextrankGensimSum
 from macropodus.summarize.graph_base.textrank_sklearn import TextrankSklearn
+import os
 
-
+# 词向量, 默认使用缓存
+use_cache = True
+if not os.environ.get("macropodus_use_w2v_cache", True):
+    use_cache = False  # 不使用缓存，重新加载
 # textrank of gensim
 trgs = TextrankGensimSum()
 # textrank of word2vec

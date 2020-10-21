@@ -7,9 +7,13 @@
 
 from macropodus.segment.seg_statistics.seg_statistics import SegStatistics
 from macropodus.segment.word_discovery.word_discovery import WordDiscovery
+import os
 
-# 机械分词
-use_cache = True # 使用缓存
+
+# 机械分词,默认使用缓存
+use_cache = True
+if not os.environ.get("macropodus_use_seg_cache", True):
+    use_cache = False  # 不使用缓存，重新加载
 segs = SegStatistics(use_cache)
 cut_bidirectional = segs.cut_bidirectional
 cut_forward = segs.cut_forward

@@ -25,6 +25,7 @@ class WordDiscovery:
         self.total_words = 0
         self.freq_min = 3
         self.len_max = 7
+        self.round = 6
         self.eps = 1e-9
         self.empty_words = [sw for sw in stop_words.values() if len(sw)==1] # 虚词
 
@@ -35,8 +36,10 @@ class WordDiscovery:
         :param use_type: str,  "text" or "file", file of "utf-8" of "txt"
         :return: class<Counter>, word-freq
         """
+        import macropodus
         self.words_count = Counter()
         if use_type=="text": # 输入为文本形式
+            text = macropodus.han2zh(text)
             texts = cut_sentence(use_type=self.algorithm,
                                  text=text)  # 切句子, 如中英文的逗号/句号/感叹号
             for text in texts:
@@ -50,6 +53,7 @@ class WordDiscovery:
             fr8 = open(text, "r", encoding="utf-8")
             for text in fr8:
                 if text.strip():
+                    text = macropodus.han2zh(text)
                     texts = cut_sentence(use_type=self.algorithm,
                                          text=text) # 切句子, 如中英文的逗号/句号/感叹号
                     for text in texts:
@@ -108,9 +112,9 @@ class WordDiscovery:
             if (k[0] in self.empty_words or k[-1] in self.empty_words):
                 entroy_boundary = entroy_boundary / len(k)
             if boundary_type == "right":
-                self.right_entropy[k] = entroy_boundary
+                self.right_entropy[k] = round(entroy_boundary, self.round)
             else:
-                self.left_entropy[k] = entroy_boundary
+                self.left_entropy[k] = round(entroy_boundary, self.round)
 
     def compute_entropys(self):
         """
@@ -146,8 +150,38 @@ class WordDiscovery:
             probability_chars = reduce(mul,([wf for wf in words_freq])) / (twl_1**(len(word)))
             pmi = math.log(probability_word / probability_chars, 2)
             # AMI=PMI/length_word. 惩罚虚词(避免"的", "得", "了"开头结尾的情况)
-            self.aggregation[word] = pmi/(len_word**len_word) if (word[0] in self.empty_words or word[-1] in self.empty_words) \
-                                                              else pmi/len_word # pmi / len_word / len_word
+            word_aggregation = pmi/(len_word**len_word) if (word[0] in self.empty_words or word[-1] in self.empty_words) \
+                                                        else pmi/len_word # pmi / len_word / len_word
+            self.aggregation[word] = round(word_aggregation, self.round)
+
+    def compute_score(self, word, value, a, r, l, rl, lambda_0, lambda_3):
+        """
+            计算最终得分
+        :param word: str, word with prepare
+        :param value: float, word freq
+        :param a: float, aggregation of word
+        :param r: float, right entropy of word
+        :param l: float, left entropy of word
+        :param rl: float, right_entropy * left_entropy
+        :param lambda_0: lambda 0
+        :param lambda_3: lambda 3
+        :return: 
+        """
+        self.new_words[word] = {}
+        # math.log10(self.aggregation[word]) - math.log10(self.total_words)
+        self.new_words[word]["a"] = a
+        self.new_words[word]["r"] = r
+        self.new_words[word]["l"] = l
+        self.new_words[word]["f"] = value
+        # word-liberalization
+        m1 = lambda_0(r)
+        m2 = lambda_0(l)
+        m3 = lambda_0(a)
+        score_ns = lambda_0((lambda_3(m1, m2) + lambda_3(m1, m3) + lambda_3(m2, m3)) / 3)
+        self.new_words[word]["ns"] = round(score_ns, self.round)
+        # 乘以词频word-freq, 连乘是为了防止出现较小项
+        score_s = value * a * rl * score_ns
+        self.new_words[word]["s"] = round(score_s, self.round)
 
     def find_word(self, text, use_type="text", freq_min=2, len_max=5, entropy_min=2.0, aggregation_min=3.2,
                         use_output=True, use_avg=False, use_filter=False):
@@ -175,66 +209,25 @@ class WordDiscovery:
         lambda_0 = lambda x: -self.eps * x + self.eps if x <= 0 else x
         # 输出
         for word, value in self.words_select.items():
+            # 过滤通用词
             if use_filter and word in self.dict_words_freq:
                 continue
+            # 过滤停用词
             if word in self.stop_words:
                 continue
-            if use_output:
-                # {"aggregation":"agg", "right_entropy":"r", "left_entropy":"l", "frequency":"f", "score":"s"}
-                self.new_words[word] = {}
-                # math.log10(self.aggregation[word]) - math.log10(self.total_words)
-                self.new_words[word]["a"] = self.aggregation[word]
-                self.new_words[word]["r"] = self.right_entropy[word]
-                self.new_words[word]["l"] = self.left_entropy[word]
-                self.new_words[word]["f"] = value
-                # word-liberalization
-                m1 = lambda_0(self.right_entropy[word])
-                m2 = lambda_0(self.left_entropy[word])
-                m3 = lambda_0(self.aggregation[word])
-                score_3 = lambda_0((lambda_3(m1, m2) + lambda_3(m1, m3) + lambda_3(m2, m3)) / 3)
-                self.new_words[word]["ns"] = score_3
-                # 乘以freq效果没那么好, 连乘是为了防止出现较小项
-                # self.new_words[word]["s"] = self.new_words[word]["f"] * self.new_words[word]["a"] * \
-                #                             self.right_entropy[word] * self.left_entropy[word]
-                self.new_words[word]["s"] = self.new_words[word]["f"] * self.new_words[word]["a"] * \
-                                            self.right_entropy[word] * self.left_entropy[word] * score_3
+            # {"aggregation":"a", "right_entropy":"r", "left_entropy":"l", "frequency":"f",
+            #  "word-liberalization":"ns", "score":"s"}
+            a = self.aggregation[word]
+            r = self.right_entropy[word]
+            l = self.left_entropy[word]
+            rl = (r+l) / 2 if use_avg else r * l
+            if use_output or (use_avg and a > self.aggregation_min and rl > self.entropy_min) or \
+                             (not use_avg and a > self.aggregation_min and r > self.entropy_min and l > self.entropy_min):
+                self.compute_score(word, value, a, r, l, rl, lambda_0, lambda_3)
 
-            elif not use_avg and self.aggregation[word] > self.aggregation_min \
-                    and self.right_entropy[word] > self.entropy_min and self.left_entropy[word] > self.entropy_min:
-                self.new_words[word] = {}
-                # {"aggregation":"agg", "right_entropy":"r", "left_entropy":"l", "frequency":"f", "score":"s"}
-                self.new_words[word]["a"] = self.aggregation[word] # math.log10(self.aggregation[word]) - math.log10(self.total_words)
-                self.new_words[word]["r"] = self.right_entropy[word]
-                self.new_words[word]["l"] = self.left_entropy[word]
-                self.new_words[word]["f"] = value
-                # word-liberalization
-                m1 = lambda_0(self.right_entropy[word])
-                m2 = lambda_0(self.left_entropy[word])
-                m3 = lambda_0(self.aggregation[word])
-                score_3 = lambda_0((lambda_3(m1, m2) + lambda_3(m1, m3) + lambda_3(m2, m3)) / 3)
-                self.new_words[word]["ns"] = score_3
-                self.new_words[word]["s"] = self.new_words[word]["f"] * self.new_words[word]["a"] * \
-                                            (self.right_entropy[word] + self.left_entropy[word])/2 * score_3
-            elif use_avg and self.aggregation[word] > self.aggregation_min \
-                    and (self.right_entropy[word] + self.left_entropy[word]) > 2 * self.entropy_min:
-                self.new_words[word] = {}
-                # {"aggregation":"agg", "right_entropy":"r", "left_entropy":"l", "frequency":"f", "score":"s"}
-                self.new_words[word]["a"] = self.aggregation[word]
-                self.new_words[word]["r"] = self.right_entropy[word]
-                self.new_words[word]["l"] = self.left_entropy[word]
-                self.new_words[word]["f"] = value
-                # word-liberalization
-                m1 = lambda_0(self.right_entropy[word])
-                m2 = lambda_0(self.left_entropy[word])
-                m3 = lambda_0(self.aggregation[word])
-                score_3 = lambda_0((lambda_3(m1, m2) + lambda_3(m1, m3) + lambda_3(m2, m3)) / 3)
-                self.new_words[word]["ns"] = score_3
-                self.new_words[word]["s"] = self.new_words[word]["a"] * (self.right_entropy[word] + self.left_entropy[word])/2
-                # mul, 相乘
-                self.new_words[word]["s"] *= score_3
         # 排序
-        new_words = sorted(self.new_words.items(), key=lambda x:x[1]["s"], reverse=True)
-        self.new_words = OrderedDict(new_words)
+        self.new_words = sorted(self.new_words.items(), key=lambda x:x[1]["s"], reverse=True)
+        self.new_words = OrderedDict(self.new_words)
         return self.new_words
 
 

@@ -8,13 +8,16 @@
 from macropodus.preprocess.tools_common import re_continue
 from macropodus.base.seg_basic import SegBasic
 from math import log
-
+import re
 
 __all__ = ["cut_dag",
            "cut_forward",
            "cut_reverse",
            "cut_bidirectional",
            "cut_search"]
+
+re_han = re.compile("([\u4E00-\u9FD5a-zA-Z0-9+#&\._%\-]+)", re.U)
+re_skip = re.compile("(\r\n|\s)", re.U)
 
 
 class SegStatistics(SegBasic):
@@ -170,22 +173,42 @@ class SegStatistics(SegBasic):
     def cut(self, sentence, type_cut="cut_dag"):
         """
             切词总函数
+            cut_block, 代码来自jieba项目
+            code from: https://github.com/fxsjy/jieba
         :param sentence:str, like '大漠帝国, macropodus, 中国斗鱼' 
         :param type_cut: str, like 'cut_dag', 'cut_forward', 'cut_reverse', 'cut_bidirectional', 'cut_search'
-        :return: list, like ['大漠帝国', ',', 'macropodus', ',', '中国斗鱼']
+        :return: yield, like ['大漠帝国', ',', 'macropodus', ',', '中国斗鱼']
         """
         if type_cut=="cut_dag":
-            return list(self.cut_dag(sentence))
+            cut_block = self.cut_dag
         elif type_cut=="cut_forward":
-            return list(self.cut_dag(sentence))
+            cut_block = self.cut_forward
         elif type_cut=="cut_reverse":
-            return list(self.cut_dag(sentence))
+            cut_block = self.cut_reverse
         elif type_cut=="cut_bidirectional":
-            return list(self.cut_dag(sentence))
+            cut_block = self.cut_bidirectional
         elif type_cut=="cut_search":
-            return list(self.cut_dag(sentence))
+            cut_block = self.cut_search
         else:
             raise RuntimeError("type_cut must be 'cut_dag', 'cut_forward', 'cut_reverse', 'cut_bidirectional', 'cut_search'")
+        blocks = re_han.split(sentence)
+        cut_all = False
+        for block in blocks:
+            if not block:
+                continue
+            if re_han.match(block):
+                for word in cut_block(block):
+                    yield word
+            else:
+                tmp = re_skip.split(block)
+                for x in tmp:
+                    if re_skip.match(x):
+                        yield x
+                    elif not cut_all:
+                        for xx in x:
+                            yield xx
+                    else:
+                        yield x
 
 
 if __name__ == '__main__':
