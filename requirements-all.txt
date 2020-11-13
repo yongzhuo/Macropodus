@@ -5,6 +5,6 @@ gensim==3.7.1
 numpy==1.16.2
 tqdm==4.31.1
 networkx==2.4
-tensorflow-gpu==1.15.0
+tensorflow-gpu==2.3.1
 keras-bert==0.80.0
 keras-adaptive-softmax==0.6.0
