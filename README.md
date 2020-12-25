@@ -22,6 +22,12 @@
 
 
 # 安装 
+0. 注意事项
+    ```
+	默认不安装nlg-yongzhuo, 如果需要该功能自行安装;
+	默认不指定numpy, pandas, scikit-learn版本, 过高或者过低的版本可能不支持
+	标准版本的依赖包详见 requirements-all.txt
+	```
 1. 通过PyPI安装(模型文件另需下载, 详见[命名实体提取](#命名实体提取), [词性标注](#词性标注))：
 	```
 	pip install macropodus

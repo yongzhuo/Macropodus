@@ -8,3 +8,4 @@ networkx==2.4
 tensorflow-gpu==1.15.0
 keras-bert==0.80.0
 keras-adaptive-softmax==0.6.0
+nlg-yongzhuo==0.0.4

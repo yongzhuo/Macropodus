@@ -1,8 +1,7 @@
-scikit-learn==0.19.1
-nlg-yongzhuo==0.0.4
-pandas==0.23.4
+numpy
+pandas
+scikit-learn
 passlib==1.7.1
 gensim==3.7.1
-numpy==1.16.2
 tqdm==4.31.1
 networkx==2.4
